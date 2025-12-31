@@ -1,3 +1,5 @@
 logs/
 notes
 config/tokens.env
+__pycache__/
+*.log

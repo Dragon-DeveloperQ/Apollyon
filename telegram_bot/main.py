@@ -2,20 +2,25 @@ import asyncio
 from os import getenv
 from dotenv import load_dotenv
 
+# aiogram imports
 from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
 from aiogram.types import Message
 
+# Local imports
 import handlers
 import logger
 
+# Initialize loggers
 logger.initAllLoggers()
 aiogram_logger = logger.getLogger("aiogram")
 
+# Load bot token
 load_dotenv("../config/tokens.env")
 TOKEN = getenv("TELEGRAM_TOKEN")
 aiogram_logger.info("Токен загружен")
 
+# Initialize dispatcher
 dp = Dispatcher()
 
 async def main() -> None:

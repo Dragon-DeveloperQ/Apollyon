@@ -1,20 +1,24 @@
+# Для получение файловых импортов из соседних директорий
+import sys
+from pathlib import Path
+ROOT_DIR = Path(__file__).parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+
 import asyncio
-from os import getenv
-from dotenv import load_dotenv
 
 # aiogram imports
 from aiogram import Bot, Dispatcher
-from aiogram.filters import Command
-from aiogram.types import Message
 
 # Local imports
 import handlers
-import logger
+import logger as logger
+import database.db
 
-# Initialize loggers
-logger.initAllLoggers()
+# Initialize logger
 aiogram_logger = logger.getLogger("aiogram")
 
+from os import getenv
+from dotenv import load_dotenv
 # Load bot token
 load_dotenv("../config/tokens.env")
 TOKEN = getenv("TELEGRAM_TOKEN")
@@ -27,6 +31,9 @@ async def main() -> None:
 
     bot = Bot(token=TOKEN)
     aiogram_logger.info("Бот запускается...")
+
+    await database.db.init_db()
+    aiogram_logger.info("База данных инициализирована.")
 
     handlers.include_handlers(dp)
     aiogram_logger.info("Хендлеры подключены.")

@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Text
 from sqlalchemy.orm import declarative_base, relationship
-from datetime import datetime
 
 # Базовый класс для всех моделей
 Base = declarative_base()
@@ -42,12 +41,17 @@ class UserCharacter(Base):
     charisma = Column(Integer, default=1)
     luck = Column(Integer, default=1)
 
+    user = relationship("User", back_populates="character")
+
 
 # ==================== Модель задач ========================
 class Task(Base):
     __tablename__ = "tasks"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    difficulty = Column(Integer, nullable=False)
     streak = Column(Integer, default=0)
 
     user = relationship("User", back_populates="tasks")

@@ -12,7 +12,7 @@ from aiogram import Bot, Dispatcher
 # Local imports
 import handlers
 import logger as logger
-import database.db
+import database
 
 # Initialize logger
 aiogram_logger = logger.getLogger("aiogram")
@@ -30,7 +30,11 @@ dp = Dispatcher()
 async def main() -> None:
 
     bot = Bot(token=TOKEN)
-    aiogram_logger.info("Бот запускается...")
+    if bot is None:
+        aiogram_logger.critical("Не удалось инициализировать бота. Проверьте токен.")
+        return
+    else:
+        aiogram_logger.info("Бот запускается...")
 
     await database.db.init_db()
     aiogram_logger.info("База данных инициализирована.")
@@ -38,6 +42,9 @@ async def main() -> None:
     handlers.include_handlers(dp)
     aiogram_logger.info("Хендлеры подключены.")
 
+    async with database.db.async_session_maker() as session:
+        await database.create.create_user(session, aiogram_logger, 123456789, "testuser")
+    
     await dp.start_polling(bot)
 
 

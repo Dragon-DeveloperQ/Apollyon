@@ -10,14 +10,16 @@ import logger
 from os import getenv
 from dotenv import load_dotenv
 
+from .models import Base
+
+
 # Load bot token
 load_dotenv("../config/db.env")
 DATABASE_URL = getenv("DATABASE_URL")
 
 db_logger = logger.getLogger("database")
 
-# Базовый класс для моделей
-Base = declarative_base()
+print("Зарегистрированные таблицы в Base:", Base.metadata.tables.keys())
 
 # Создаём async engine
 async_engine = create_async_engine(

@@ -42,7 +42,7 @@ async def main() -> None:
     handlers.include_handlers(dp)
     aiogram_logger.info("Хендлеры подключены.")
 
-    await database.interactions.create_task_for_character(1, "Second Task", "This is the second task description.")
+    await database.interactions.reward_task_completion(1)
     
     await dp.start_polling(bot)
 

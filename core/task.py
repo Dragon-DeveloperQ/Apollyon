@@ -1,7 +1,7 @@
 import math
 
 def calculateTaskReward(dificultyAverage, dificult, streak):
-    return dificult + 0.2 * dificultyAverage * (1 + math.sqrt(dificultyAverage)*math.log1p(1 + streak))
+    return round(dificult + 0.2 * dificultyAverage * (1 + math.sqrt(dificultyAverage)*math.log1p(1 + streak)), 2)
 
 def newAverageDifficulty(dificultyAverage, dificult):
-    return (dificultyAverage * 0.9 * 9 + dificult) / 10 
+    return round((dificultyAverage * 0.9 * 9 + dificult) / 10 , 2)

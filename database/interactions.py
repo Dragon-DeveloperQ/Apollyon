@@ -2,15 +2,24 @@ import database
 import logger as logger
 import asyncio
 
+import sys
+from pathlib import Path
+ROOT_DIR = Path(__file__).parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+
+import core.task
+
+from . import change
 from . import create
 from . import read
 
 db_logger = logger.getLogger("database")
 
 
+
 # --------- Регистрация нового пользователя ---------
 async def register_new_user(telegram_id: int, username: str):
-    db_logger.info(f"Регестрация пользователя: telegram_id={telegram_id}, username={username}")
+    db_logger.info(f"Регестрация пользователя: telegram_id={telegram_id}, username={username}...")
 
     # Проверяем, существует ли пользователь
     async with database.db.async_session_maker() as session:
@@ -28,9 +37,10 @@ async def register_new_user(telegram_id: int, username: str):
         db_logger.error(f"Ошибка при регистрации пользователя telegram_id={telegram_id}: {e}")
 
 
+
 # --------- Создание задания для персонажа ---------
 async def create_task_for_character(character_id: int, title: str, description: str):
-    db_logger.info(f"Создание задания для character_id={character_id}: title='{title}'")
+    db_logger.info(f"Создание задания для character_id={character_id}: title='{title}'...")
 
     # Проверяем, существует ли персонаж и задание
     async with database.db.async_session_maker() as session:
@@ -51,3 +61,41 @@ async def create_task_for_character(character_id: int, title: str, description: 
             await create.create_task(session, db_logger, character_id=character_id, title=title, description=description)
     except Exception as e:
         db_logger.error(f"Ошибка при создании задания для character_id={character_id}: {e}")
+
+
+
+# --------- Получение награды за задание ---------
+async def reward_task_completion(task_id: int):
+    db_logger.info(f"Награждение за выполнение задания id={task_id} для пользователя...")
+
+    # Получаем задание
+    async with database.db.async_session_maker() as session:
+        task = await read.get_task_by_id(session, db_logger, task_id)
+
+    if task is None:
+        db_logger.error(f"Задание с id={task_id} не найдено. Награда не выдана.")
+        return
+
+    # Рассчет сложности (заглушка)
+    difficulty = 1
+
+    # Обновление средней сложности задания
+    new_difficulty_avg = core.task.newAverageDifficulty(task.difficultyAVG, difficulty)
+    if new_difficulty_avg is None:
+        db_logger.error(f"Ошибка при расчете новой средней сложности для задания id={task_id}. Награда не выдана.")
+        return
+    
+    async with database.db.async_session_maker() as session:
+        await change.update_task_difficulty_average(session, db_logger, task_id, new_difficulty_avg)
+
+    # Рассчет нагрды
+    reward = core.task.calculateTaskReward(task.difficultyAVG, difficulty, task.streak)
+    if reward is None:
+        db_logger.error(f"Ошибка при расчете награды для задания id={task_id}. Награда не выдана.")
+        return
+    
+    async with database.db.async_session_maker() as session:
+        await change.update_task_reward(session, db_logger, task.character_id, reward)
+    
+    db_logger.info(f"Пользователь награжден за выполнение задания id={task_id}: reward={reward}")
+    

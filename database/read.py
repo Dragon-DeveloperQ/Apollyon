@@ -28,11 +28,17 @@ async def get_character_by_user_id(session, logger, user_id: int):
     ) 
     return result.scalar_one_or_none()
 
+# --------- Получить персонажа по ID ---------
+async def get_character_by_id(session, logger, character_id: int):
+    character = await session.get(UserCharacter, character_id)
+    return character
+
 
 # --------- Получить задачу по ID ---------
 async def get_task_by_id(session, logger, task_id: int):
     task = await session.get(Task, task_id)
     return task
+
 
 # --------- Получить задачу по названию и имени персонажа ---------
 async def get_task_by_title_and_character(session, logger, title: str, character_id: int):

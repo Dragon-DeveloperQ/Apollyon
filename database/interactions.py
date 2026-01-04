@@ -66,36 +66,62 @@ async def create_task_for_character(character_id: int, title: str, description: 
 
 # --------- Получение награды за задание ---------
 async def reward_task_completion(task_id: int):
+    '''
+    Получение награды за выполнение задания.
+    Требует task_id выполненного задания.
+
+    При успешном выполнении: вовзращает итоговую награду
+    При ошибке: возвращает None
+    '''
+    
     db_logger.info(f"Награждение за выполнение задания id={task_id} для пользователя...")
-
-    # Получаем задание
-    async with database.db.async_session_maker() as session:
-        task = await read.get_task_by_id(session, db_logger, task_id)
-
-    if task is None:
-        db_logger.error(f"Задание с id={task_id} не найдено. Награда не выдана.")
-        return
-
-    # Рассчет сложности (заглушка)
-    difficulty = 1
-
-    # Обновление средней сложности задания
-    new_difficulty_avg = core.task.newAverageDifficulty(task.difficultyAVG, difficulty)
-    if new_difficulty_avg is None:
-        db_logger.error(f"Ошибка при расчете новой средней сложности для задания id={task_id}. Награда не выдана.")
-        return
     
-    async with database.db.async_session_maker() as session:
-        await change.update_task_difficulty_average(session, db_logger, task_id, new_difficulty_avg)
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                # Получаем задание
+                task = await read.get_task_by_id(session, db_logger, task_id)
 
-    # Рассчет нагрды
-    reward = core.task.calculateTaskReward(task.difficultyAVG, difficulty, task.streak)
-    if reward is None:
-        db_logger.error(f"Ошибка при расчете награды для задания id={task_id}. Награда не выдана.")
-        return
-    
-    async with database.db.async_session_maker() as session:
-        await change.update_task_reward(session, db_logger, task.character_id, reward)
-    
-    db_logger.info(f"Пользователь награжден за выполнение задания id={task_id}: reward={reward}")
-    
+                if task is None:
+                    db_logger.error(f"Задание с id={task_id} не найдено. Награда не выдана.")
+                    return None
+
+                # Увеличение streak при надобности
+                streak = await change.increment_task_streak(session, db_logger, task_id)
+                if streak is None:
+                    db_logger.error(f"Не удалось увеличить стрик задания id={task_id}. Награда не выдана.")
+                    raise Exception("Ошибка увеличения стрика")
+
+                # Повторно получаем задание с обновленным стриком
+                task = await read.get_task_by_id(session, db_logger, task_id)
+
+                # Рассчет сложности (заглушка)
+                difficulty = 1
+
+                # Обновление средней сложности задания
+                new_difficulty_avg = core.task.newAverageDifficulty(task.difficultyAVG, difficulty, streak)
+                if new_difficulty_avg is None:
+                    db_logger.error(f"Ошибка при расчете новой средней сложности для задания id={task_id}. Награда не выдана.")
+                    raise Exception("Ошибка расчета новой средней сложности")
+
+                new_difficulty_avg = await change.update_task_difficulty_average(session, db_logger, task_id, new_difficulty_avg)
+                if new_difficulty_avg is None:
+                    db_logger.error(f"Ошибка при обновлении средней сложности для задания id={task_id}. Награда не выдана.")
+                    raise Exception("Ошибка обновления средней сложности")
+                
+                # Повторно получаем задание с обновленным стриком
+                task = await read.get_task_by_id(session, db_logger, task_id)
+
+                # Рассчет нагрды
+                reward = core.task.calculateTaskReward(task.difficultyAVG, difficulty, streak)
+                if reward is None:
+                    db_logger.error(f"Ошибка при расчете награды для задания id={task_id}. Награда не выдана.")
+                    raise Exception("Ошибка расчета награды")
+                
+                # Выдача награды персонажу
+                await change.update_task_reward(session, db_logger, task.character_id, reward)
+                db_logger.debug(f"Награда за выполнение задания id={task_id} успешно выдана: reward={reward}")
+                return reward
+            
+    except Exception as e:
+        db_logger.error(f"Ошибка при выдаче награды за задание id={task_id}: {e}")        

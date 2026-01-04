@@ -42,8 +42,7 @@ async def main() -> None:
     handlers.include_handlers(dp)
     aiogram_logger.info("Хендлеры подключены.")
 
-    async with database.db.async_session_maker() as session:
-        await database.create.create_user(session, aiogram_logger, 123456789, "testuser")
+    await database.interactions.register_new_user(123123, "asfaf")  # Пример вызова функции регистрации пользователя
     
     await dp.start_polling(bot)
 

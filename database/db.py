@@ -19,7 +19,6 @@ DATABASE_URL = getenv("DATABASE_URL")
 
 db_logger = logger.getLogger("database")
 
-print("Зарегистрированные таблицы в Base:", Base.metadata.tables.keys())
 
 # Создаём async engine
 async_engine = create_async_engine(

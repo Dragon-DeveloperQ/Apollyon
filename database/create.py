@@ -2,7 +2,6 @@ from database.models.models import User, UserCharacter, Task
 
 # --------- Создать пользователя ---------
 async def create_user(session, logger, telegram_id: int, username: str):
-    logger.info(f"Creating user: telegram_id={telegram_id}, username={username}")
     
     user = User(
         telegram_id=telegram_id,
@@ -26,6 +25,7 @@ async def create_character(session, logger, user_id: int):
     await session.commit()
     await session.refresh(character)
     
+    logger.info(f"Персонаж создан: id={character.id}")
     return character
 
 

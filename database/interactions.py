@@ -35,12 +35,12 @@ async def create_task_for_character(character_id: int, title: str, description: 
     # Проверяем, существует ли персонаж и задание
     async with database.db.async_session_maker() as session:
         character = await read.get_character_by_user_id(session, db_logger, character_id)
-        task = await read.get_task_by_id(session, db_logger, character_id)
+        task = await read.get_task_by_title_and_character(session, db_logger, title, character_id)
 
     if character is None:
         db_logger.error(f"Персонаж с id={character_id} не найден. Задание не создано.")
     if task is not None:
-        db_logger.warning(f"Задание для character_id={character_id} уже существует. Новое задание не создано.")    
+        db_logger.warning(f"Задание для character_id={character_id} под именем '{title}' уже существует. Новое задание не создано.")    
     
     if character is None or task is not None:
         return

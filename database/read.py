@@ -33,3 +33,10 @@ async def get_character_by_user_id(session, logger, user_id: int):
 async def get_task_by_id(session, logger, task_id: int):
     task = await session.get(Task, task_id)
     return task
+
+# --------- Получить задачу по названию и имени персонажа ---------
+async def get_task_by_title_and_character(session, logger, title: str, character_id: int):
+    result = await session.execute(
+        select(Task).where(Task.title == title, Task.character_id == character_id)
+    )
+    return result.scalar_one_or_none()

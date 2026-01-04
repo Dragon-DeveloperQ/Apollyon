@@ -42,7 +42,8 @@ async def main() -> None:
     handlers.include_handlers(dp)
     aiogram_logger.info("Хендлеры подключены.")
 
-    await database.interactions.register_new_user(123123, "asfaf")  # Пример вызова функции регистрации пользователя
+    await database.interactions.register_new_user(123123, "asfaf")
+    await database.interactions.create_task_for_character(1, "First Task", "This is the first task description.")
     
     await dp.start_polling(bot)
 

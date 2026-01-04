@@ -38,12 +38,16 @@ async def init_db():
     db_logger.info("Инициализация базы данных...")
     
     async with async_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        try:
+            await conn.run_sync(Base.metadata.create_all)
+            db_logger.info("База данных успешно инициализирована.")
+        except Exception as e:
+            db_logger.error(f"Ошибка при инициализации таблиц: {e}")
     
-    db_logger.info("База данных успешно инициализирована.")
+    
 
 
 async def get_session():
     async with async_session_maker() as session:
-        db_logger.debug("Полученная новая сессия базы данных.")
+        db_logger.debug("Полученна новая сессия базы данных.")
         yield session

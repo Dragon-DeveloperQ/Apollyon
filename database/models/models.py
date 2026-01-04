@@ -14,7 +14,7 @@ class User(Base):
     
     # Связи с другими моделями
     character = relationship("UserCharacter", back_populates="user", uselist=False)
-    tasks = relationship("Task", back_populates="user")
+    
 
 
 # ============== Модель персонажа пользователя =============
@@ -42,16 +42,17 @@ class UserCharacter(Base):
     luck = Column(Integer, default=1)
 
     user = relationship("User", back_populates="character")
+    tasks = relationship("Task", back_populates="character")
 
 
 # ==================== Модель задач ========================
 class Task(Base):
     __tablename__ = "tasks"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    character_id = Column(Integer, ForeignKey("user_characters.id"))
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    difficulty = Column(Integer, nullable=False)
+    difficultyAVG = Column(Integer, default=0)
     streak = Column(Integer, default=0)
 
-    user = relationship("User", back_populates="tasks")
+    character = relationship("UserCharacter", back_populates="tasks")

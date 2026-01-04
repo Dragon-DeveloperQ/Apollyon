@@ -17,9 +17,6 @@ async def get_user_by_telegram_id(session, logger, telegram_id: int):
         select(User).where(User.telegram_id == telegram_id)
     )
     user = result.scalar_one_or_none()
-
-    if user is None:
-        logger.warning(f"Пользователь с telegram_id={telegram_id} не найден.")
     
     return user
 
@@ -28,19 +25,11 @@ async def get_user_by_telegram_id(session, logger, telegram_id: int):
 async def get_character_by_user_id(session, logger, user_id: int):
     result = await session.execute(
         select(UserCharacter).where(UserCharacter.user_id == user_id)
-    )
-
-    if result is None:
-        logger.warning(f"Персонаж для user_id={user_id} не найден.")
-    
+    ) 
     return result.scalar_one_or_none()
 
 
 # --------- Получить задачу по ID ---------
 async def get_task_by_id(session, logger, task_id: int):
     task = await session.get(Task, task_id)
-
-    if task is None:
-        logger.warning(f"Задача с id={task_id} не найдена.")
-
     return task

@@ -30,18 +30,17 @@ async def create_character(session, logger, user_id: int):
 
 
 # --------- Создать задачу ---------
-async def create_task(session, logger, user_id: int, title: str, description: str, difficulty: int):
+async def create_task(session, logger, character_id: int, title: str, description: str):
 
     task = Task(
-        user_id=user_id,
+        character_id=character_id,
         title=title,
-        description=description,
-        difficulty=difficulty
+        description=description
     )
     
     session.add(task)
     await session.commit()
     await session.refresh(task)
     
-    logger.info(f"Task created: id={task.id}, title='{task.title}'")
+    logger.info(f"Задание создано: id={task.id}, title='{task.title}'")
     return task

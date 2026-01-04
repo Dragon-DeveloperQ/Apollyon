@@ -1,5 +1,7 @@
 from database.models.models import User, UserCharacter, Task
 
+
+
 # --------- Создать пользователя ---------
 async def create_user(session, logger, telegram_id: int, username: str):
     
@@ -7,12 +9,12 @@ async def create_user(session, logger, telegram_id: int, username: str):
         telegram_id=telegram_id,
         username=username
     )
-    session.add(user)
-    await session.commit()
-    await session.refresh(user)
+    session.add(user) 
+    await session.flush()
 
     logger.info(f"Пользователь создан: id={user.id}")
     return user
+
 
 
 # --------- Создать персонажа пользователя ---------
@@ -22,11 +24,11 @@ async def create_character(session, logger, user_id: int):
     )
     
     session.add(character)
-    await session.commit()
-    await session.refresh(character)
+    await session.flush()
     
     logger.info(f"Персонаж создан: id={character.id}")
     return character
+
 
 
 # --------- Создать задачу ---------
@@ -39,8 +41,7 @@ async def create_task(session, logger, character_id: int, title: str, descriptio
     )
     
     session.add(task)
-    await session.commit()
-    await session.refresh(task)
+    await session.flush()
     
     logger.info(f"Задание создано: id={task.id}, title='{task.title}'")
     return task

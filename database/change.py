@@ -11,6 +11,7 @@ async def update_task_difficulty_average(session, logger, task_id: int, new_diff
     '''
     Обновляет значение средней сложности задания.
     '''
+
     task = await read.get_task_by_id(session, logger, task_id)
     if task is None:
         logger.error(f"Задание с id={task_id} не найдено. Средняя сложность не обновлена.")
@@ -23,6 +24,8 @@ async def update_task_difficulty_average(session, logger, task_id: int, new_diff
     logger.debug(f"Средняя сложность задания обновлена: id={task.id}, difficultyAVG={task.difficultyAVG}")
     return float(task.difficultyAVG)
 
+
+
 # --------- Получение награды за задание ---------
 async def update_task_reward(session, logger, character_id: int, reward: float):
     
@@ -32,13 +35,14 @@ async def update_task_reward(session, logger, character_id: int, reward: float):
         return None
     
     character.exp += reward
-    character.level += reward
+    character.gold += reward
 
     session.add(character)
     await session.flush()
     
     logger.debug(f"Награда за задание добавлена персонажу: id={character.id}, experience={character.exp}, gold={character.gold}")
     return reward
+
 
 
 # --------- Увеличение стрика задания ---------

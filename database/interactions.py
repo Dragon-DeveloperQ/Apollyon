@@ -13,6 +13,8 @@ from . import change
 from . import create
 from . import read
 
+from .models import Task
+
 db_logger = logger.getLogger("database")
 
 
@@ -47,7 +49,7 @@ async def register_new_user(telegram_id: int, username: str):
 
 
 # --------- Создание задания для персонажа ---------
-async def create_task_for_character(character_id: int, title: str, description: str):
+async def create_task_for_character(character_id: int, title: str, description=None):
     '''
     Создает задание для персонажа с заданным character_id.
     '''

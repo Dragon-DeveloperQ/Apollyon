@@ -43,8 +43,12 @@ async def main() -> None:
     aiogram_logger.info("Хендлеры подключены.")
 
     # await database.interactions.register_new_user(123456789, "test_user")
-    # await database.interactions.create_task_for_character(1, "Первое задание", "Описание первого задания")
-    await database.interactions.TaskInteraction.reward_task_completion(1)
+
+    # await database.interactions.reward_task_completion(1)
+
+    # tasts = await database.interactions.get_all_tasks_for_character(1)
+    # for task in tasts:
+    #    aiogram_logger.info(f"Задание: {task.title}, Описание: {task.description}")
 
 
     

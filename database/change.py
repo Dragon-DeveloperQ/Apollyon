@@ -40,7 +40,6 @@ async def update_task_reward(session, logger, character_id: int, reward: float):
     session.add(character)
     await session.flush()
     
-    logger.debug(f"Награда за задание добавлена персонажу: id={character.id}, experience={character.exp}, gold={character.gold}")
     return reward
 
 

@@ -139,4 +139,34 @@ async def reward_task_completion(task_id: int):
                 return reward
             
     except Exception as e:
-        db_logger.error(f"Ошибка при выдаче награды за задание id={task_id}: {e}")        
+        db_logger.error(f"Ошибка при выдаче награды за задание id={task_id}: {e}")
+
+
+
+# ---------- Удаление задания ----------
+async def delete_task(task_id: int):
+    '''
+    Удаляет задание с заданным task_id.
+    '''
+
+    db_logger.info(f"Удаление задания id={task_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                # Получаем задание
+                task = await read.get_task_by_id(session, db_logger, task_id)
+                if task is None:
+                    db_logger.warning(f"Задание с id={task_id} не найдено. Удаление не выполнено.")
+                    return False
+
+                await session.delete(task)
+                await session.flush()
+
+                db_logger.info(f"Задание id={task_id} успешно удалено.")
+                return True
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при удалении задания id={task_id}: {e}")
+        return False

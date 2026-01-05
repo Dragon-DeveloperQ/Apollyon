@@ -170,3 +170,34 @@ async def delete_task(task_id: int):
     except Exception as e:
         db_logger.error(f"Ошибка при удалении задания id={task_id}: {e}")
         return False
+
+
+
+async def get_all_tasks_for_character(character_id: int):
+    '''
+    Получает все задания для персонажа с заданным character_id.
+    Возвращает список заданий или None в случае ошибки.
+    '''
+
+    db_logger.info(f"Получение всех заданий для character_id={character_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                character = await read.get_character_by_id(session, db_logger, character_id)
+                if character is None:
+                    db_logger.error(f"Персонаж с id={character_id} не найден. Невозможно получить задания.")
+                    return None
+
+                result = await session.execute(
+                    read.select(Task).where(Task.character_id == character_id)
+                )
+                tasks = result.scalars().all()
+
+                db_logger.info(f"Получено {len(tasks)} заданий для character_id={character_id}.")
+                return tasks
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при получении заданий для character_id={character_id}: {e}")
+        return None

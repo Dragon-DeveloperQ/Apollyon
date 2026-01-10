@@ -1,0 +1,22 @@
+{
+	"nodes":[
+		{"id":"4261cd6946842b00","type":"text","text":"Главное меню","x":-140,"y":-240,"width":250,"height":60,"color":"2"},
+		{"id":"0540d8dc70d4cf55","type":"text","text":"Профиль\n// Показывает уровень, золото, опыт и характеристики","x":-420,"y":-20,"width":250,"height":120,"color":"4"},
+		{"id":"6a2d08edb0039625","type":"text","text":"Задания\n// Показывает все задания","x":-155,"y":-20,"width":280,"height":80,"color":"2"},
+		{"id":"79fe8aabc078ebf9","type":"text","text":"- Создать задание\n- Изменить задание\n- Удалить задание","x":-140,"y":80,"width":250,"height":90,"color":"4"},
+		{"id":"470d5de47959f123","type":"text","text":"Настройки","x":265,"y":-20,"width":250,"height":60,"color":"2"},
+		{"id":"9cc56d108f882d15","type":"text","text":"Язык","x":140,"y":260,"width":250,"height":60,"color":"2"},
+		{"id":"5784e21f2649100d","type":"text","text":"Eng/Ru/Uk","x":140,"y":340,"width":250,"height":60,"color":"4"},
+		{"id":"99d9a0578126b222","type":"text","text":"Сбросить профиль","x":400,"y":260,"width":250,"height":60,"color":"4"},
+		{"id":"7e9547a5e032af80","x":840,"y":260,"width":250,"height":60,"color":"1","type":"text","text":"Уведомления"}
+	],
+	"edges":[
+		{"id":"5ef8b1b911edb417","fromNode":"4261cd6946842b00","fromSide":"bottom","toNode":"0540d8dc70d4cf55","toSide":"top"},
+		{"id":"b4e067c68603bc81","fromNode":"4261cd6946842b00","fromSide":"bottom","toNode":"6a2d08edb0039625","toSide":"top"},
+		{"id":"d40b61d424f7575e","fromNode":"4261cd6946842b00","fromSide":"bottom","toNode":"470d5de47959f123","toSide":"top"},
+		{"id":"af7e7e59e4b05be7","fromNode":"6a2d08edb0039625","fromSide":"bottom","toNode":"79fe8aabc078ebf9","toSide":"top"},
+		{"id":"e31323b8f385a68a","fromNode":"470d5de47959f123","fromSide":"bottom","toNode":"9cc56d108f882d15","toSide":"top"},
+		{"id":"f08622971a497b2a","fromNode":"470d5de47959f123","fromSide":"bottom","toNode":"99d9a0578126b222","toSide":"top"},
+		{"id":"09358f57435c12fd","fromNode":"470d5de47959f123","fromSide":"bottom","toNode":"7e9547a5e032af80","toSide":"top"}
+	]
+}

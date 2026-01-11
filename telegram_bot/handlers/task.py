@@ -2,15 +2,11 @@ from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command
 
-import sys
-from pathlib import Path
-ROOT_DIR = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT_DIR))
-
-from keyboards.main import task_keyboard
+from telegram_bot.keyboards.main import get_task_keyboard
+from telegram_bot.languages import get_commands
 
 router = Router()
 
-@router.message(F.text == "📚 Задания")
+@router.message(F.text.in_(get_commands("tasks")))
 async def task_handler(message: Message):
-    await message.answer("Ваши задания: ", reply_markup=task_keyboard)
+    await message.answer("Ваши задания: ", reply_markup=get_task_keyboard())

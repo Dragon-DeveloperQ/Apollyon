@@ -1,27 +1,38 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from telegram_bot.languages import languages_menu_list
 
-main_keyboard_list = [
-    [KeyboardButton(text="👤 Профиль")],
-    [KeyboardButton(text="📚 Задания"), KeyboardButton(text="⚙️ Настройки")]
-]
+def get_main_keyboard(language_code="en"):
+    main_keyboard_list = [
+        [KeyboardButton(text=languages_menu_list[language_code]["profile"])],
+        [KeyboardButton(text=languages_menu_list[language_code]["tasks"]), KeyboardButton(text=languages_menu_list[language_code]["settings"])]
+    ]
+    main_keyboard = ReplyKeyboardMarkup(keyboard=main_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
+    return main_keyboard
 
-profile_keyboard_list = [
-    [KeyboardButton(text="⬅️ Назад")]
-]
 
-task_keyboard_list = [
-    [KeyboardButton(text="📝 Новое задание")],
-    [KeyboardButton(text="🪄 Изменить задание")],
-    [KeyboardButton(text="⬅️ Назад"), KeyboardButton(text="🗑 Удалить задание")]
-]
+def get_task_keyboard(language_code="en"):
+    task_keyboard_list = [
+        [KeyboardButton(text=languages_menu_list[language_code]["new_task"])],
+        [KeyboardButton(text=languages_menu_list[language_code]["change_task"])],
+        [KeyboardButton(text=languages_menu_list[language_code]["back"]), KeyboardButton(text=languages_menu_list[language_code]["delete_task"])]
+    ]
+    task_keyboard = ReplyKeyboardMarkup(keyboard=task_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
+    return task_keyboard
 
-settings_keyboard_list = [
-    [KeyboardButton(text="🔔 Уведомления")],
-    [KeyboardButton(text="🇷🇺🇺🇦🇺🇸 Язык")],
-    [KeyboardButton(text="⬅️ Назад"), KeyboardButton(text="❌ Удалить персонажа")]
-]
 
-main_keyboard = ReplyKeyboardMarkup(keyboard=main_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
-task_keyboard = ReplyKeyboardMarkup(keyboard=task_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
-settings_keyboard = ReplyKeyboardMarkup(keyboard=settings_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
-profile_keyboard = ReplyKeyboardMarkup(keyboard=profile_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
+def get_profile_keyboard(language_code="en"):
+    profile_keyboard_list = [
+        [KeyboardButton(text=languages_menu_list[language_code]["back"])]
+    ]
+    profile_keyboard = ReplyKeyboardMarkup(keyboard=profile_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
+    return profile_keyboard
+
+
+def get_settings_keyboard(language_code="en"):
+    settings_keyboard_list = [
+        [KeyboardButton(text=languages_menu_list[language_code]["notifications"])],
+        [KeyboardButton(text=languages_menu_list[language_code]["language"])],
+        [KeyboardButton(text=languages_menu_list[language_code]["back"]), KeyboardButton(text=languages_menu_list[language_code]["delete_character"])]
+    ]
+    settings_keyboard = ReplyKeyboardMarkup(keyboard=settings_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
+    return settings_keyboard

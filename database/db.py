@@ -49,5 +49,4 @@ async def init_db():
 
 async def get_session():
     async with async_session_maker() as session:
-        db_logger.debug("Полученна новая сессия базы данных.")
         yield session

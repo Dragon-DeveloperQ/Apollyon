@@ -9,4 +9,4 @@ router = Router()
 
 @router.message(F.text.in_(get_commands("profile")))
 async def start_handler(message: Message):
-    await message.answer("Ваш профиль: ", reply_markup=get_profile_keyboard())
+    await message.answer("Ваш профиль: ", reply_markup= await get_profile_keyboard(message.from_user.id))

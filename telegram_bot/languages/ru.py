@@ -1,5 +1,5 @@
 
-menu = {
+menu_buttons = {
 "profile" : "👤 Профиль",
 "tasks" : "📚 Задания",
 "settings" : "⚙️ Настройки",
@@ -10,4 +10,14 @@ menu = {
 "notifications" : "🔔 Уведомления",
 "language" : "🇷🇺🇺🇦🇺🇸 Язык",
 "delete_character" : "❌ Удалить персонажа",
+}
+
+
+text = {
+"profile" : "Ваш профиль:",
+"main_menu" : "Главное меню",
+"tasks" : "Ваши задания:",
+"settings" : "Настройки:",
+"language_changed" : "Язык изменен на",
+"choose_language" : "Выберите язык:"
 }

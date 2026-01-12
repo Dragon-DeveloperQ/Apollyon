@@ -1,5 +1,5 @@
 
-menu = {
+menu_buttons = {
 "profile" : "👤 Profile",
 "tasks" : "📚 Tasks",
 "settings" : "⚙️ Settings",
@@ -10,4 +10,14 @@ menu = {
 "notifications" : "🔔 Notifications",
 "language" : "🇷🇺🇺🇦🇺🇸 Language",
 "delete_character" : "❌ Delete Character",
+}
+
+
+text = {
+"profile" : "Your profile:",
+"main_menu" : "Main menu",
+"tasks" : "Your tasks:",
+"settings" : "Settings:",
+"language_changed" : "Language changed to",
+"choose_language" : "Choose a language:"
 }

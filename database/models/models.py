@@ -11,6 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     telegram_id = Column(Integer, unique=True, nullable=True)
     username = Column(String(255), nullable=True)
+    language_code = Column(String(10), default="ru")
     
     # Связи с другими моделями
     character = relationship("UserCharacter", back_populates="user", uselist=False)

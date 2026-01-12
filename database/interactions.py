@@ -14,9 +14,7 @@ from . import create
 from . import read
 
 from .models import Task
-
-db_logger = logger.getLogger("database")
-
+from database.db import db_logger
 
 
 # --------- Регистрация нового пользователя ---------
@@ -175,6 +173,7 @@ async def delete_task(task_id: int):
 
 
 
+# --------- Получение всех заданий для персонажа ---------
 async def get_all_tasks_for_character(character_id: int):
     '''
     Получает все задания для персонажа с заданным character_id.
@@ -202,4 +201,60 @@ async def get_all_tasks_for_character(character_id: int):
 
     except Exception as e:
         db_logger.error(f"Ошибка при получении заданий для character_id={character_id}: {e}")
+        return None
+
+
+
+# --------- Смена языка пользователя ---------
+async def change_user_language(telegram_id: int, new_language: str):
+    '''
+    Изменяет язык пользователя с заданным telegram_id на new_language.
+    '''
+
+    db_logger.info(f"Смена языка пользователя telegram_id={telegram_id} на '{new_language}'...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+                if user is None:
+                    db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Смена языка не выполнена.")
+                    return False
+
+                user.language_code = new_language
+                session.add(user)
+                await session.flush()
+
+                db_logger.info(f"Язык пользователя telegram_id={telegram_id} успешно изменен на '{new_language}'.")
+                return True
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при смене языка пользователя telegram_id={telegram_id}: {e}")
+        return False
+
+
+# --------- Получение языка пользователя ---------
+async def get_user_language(telegram_id: int):
+    '''
+    Получает язык пользователя с заданным telegram_id.
+    Возвращает код языка или None в случае ошибки.
+    '''
+
+    db_logger.debug(f"Получение языка пользователя telegram_id={telegram_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                language = await read.get_user_language_by_telegram_id(session, db_logger, telegram_id)
+                if language is None:
+                    db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Невозможно получить язык.")
+                    return None
+
+                db_logger.debug(f"Язык пользователя telegram_id={telegram_id} успешно получен: '{language}'.")
+                return language
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при получении языка пользователя telegram_id={telegram_id}: {e}")
         return None

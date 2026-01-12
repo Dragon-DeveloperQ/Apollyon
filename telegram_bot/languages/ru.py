@@ -19,5 +19,6 @@ text = {
 "tasks" : "Ваши задания:",
 "settings" : "Настройки:",
 "language_changed" : "Язык изменен на",
-"choose_language" : "Выберите язык:"
+"choose_language" : "Выберите язык:",
+"your_tasks" : "Ваши задания:"
 }

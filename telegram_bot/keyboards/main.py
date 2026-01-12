@@ -8,8 +8,7 @@ sys.path.insert(0, str(ROOT_DIR))
 
 from database.interactions import get_user_language
 
-async def get_main_keyboard(telegram_id: int):
-    language_code = await get_user_language(telegram_id)
+async def get_main_keyboard(language_code: str):
     main_keyboard_list = [
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["profile"])],
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["tasks"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["settings"])]
@@ -18,8 +17,7 @@ async def get_main_keyboard(telegram_id: int):
     return main_keyboard
 
 
-async def get_task_keyboard(telegram_id: int):
-    language_code = await get_user_language(telegram_id)
+async def get_task_keyboard(language_code: str):
     task_keyboard_list = [
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["new_task"])],
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["change_task"])],
@@ -29,8 +27,7 @@ async def get_task_keyboard(telegram_id: int):
     return task_keyboard
 
 
-async def get_profile_keyboard(telegram_id: int):
-    language_code = await get_user_language(telegram_id)
+async def get_profile_keyboard(language_code: str):
     profile_keyboard_list = [
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["back"])]
     ]

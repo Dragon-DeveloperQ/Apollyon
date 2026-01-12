@@ -47,7 +47,7 @@ async def main() -> None:
     middlewares.include_middlewares(dp)
     aiogram_logger.info("Middlewares подключены.")
     
-    await database.interactions.register_new_user(1603284838, "Даша")
+    # await database.interactions.register_new_user(1603284838, "Даша")
 
     # await database.interactions.reward_task_completion(1)
 

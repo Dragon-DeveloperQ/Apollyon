@@ -3,11 +3,11 @@ from aiogram.types import Message
 from aiogram.filters import Command
 
 from telegram_bot.keyboards.main import get_profile_keyboard
-from telegram_bot.languages import get_commands
+from telegram_bot.languages import get_commands, get_text_by_language
 
 router = Router()
 
 @router.message(F.text.in_(get_commands("profile")))
-async def start_handler(message: Message, logger):
+async def start_handler(message: Message, logger, language_code):
     logger.debug("Демонастрация профиля пользователя %s", message.from_user.id)
-    await message.answer("Ваш профиль: ", reply_markup= await get_profile_keyboard(message.from_user.id))
+    await message.answer(get_text_by_language("profile", language_code), reply_markup = await get_profile_keyboard(language_code))

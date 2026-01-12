@@ -1,4 +1,4 @@
-from .logger_middleware import LoggerMiddleware
+from .middleware import Middleware
 
 def include_middlewares(dp):
-    dp.update.middleware(LoggerMiddleware())
+    dp.update.middleware(Middleware())

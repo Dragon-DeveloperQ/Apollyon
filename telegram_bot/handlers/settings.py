@@ -2,8 +2,8 @@ from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.filters import Command
 
-from telegram_bot.keyboards.main import get_settings_keyboard_by_telegram_id, get_settings_language_keyboard, get_settings_keyboard_by_language
-from telegram_bot.languages import get_commands
+from telegram_bot.keyboards.main import get_settings_language_keyboard, get_settings_keyboard_by_language
+from telegram_bot.languages import get_commands, get_text_by_language
 
 import sys
 from pathlib import Path
@@ -15,14 +15,14 @@ from database.interactions import change_user_language
 router = Router()
 
 @router.message(F.text.in_(get_commands("settings")))
-async def settings_handler(message: Message, logger):
+async def settings_handler(message: Message, logger, language_code):
     logger.debug("Открытие настроек для пользователя %s", message.from_user.id)
-    await message.answer("Настройки:", reply_markup=await get_settings_keyboard_by_telegram_id(message.from_user.id))
+    await message.answer(get_text_by_language("settings", language_code), reply_markup=await get_settings_keyboard_by_language(language_code))
 
 @router.message(F.text.in_(get_commands("language")))
-async def language_handler(message: Message, logger):
+async def language_handler(message: Message, logger, language_code):
     logger.debug("Открытие выбора языка для пользователя %s", message.from_user.id)
-    await message.answer("Выберите язык:", reply_markup=get_settings_language_keyboard())
+    await message.answer(get_text_by_language("choose_language", language_code), reply_markup=get_settings_language_keyboard())
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith("lang:"))
@@ -33,5 +33,5 @@ async def process_language_callback(callback_query, logger):
 
     await callback_query.message.edit_reply_markup(reply_markup=None)
 
-    await callback_query.answer(f"Язык изменен на {lang_code}.")
-    await callback_query.message.answer("Настройки:", reply_markup=await get_settings_keyboard_by_language(lang_code))
+    await callback_query.answer("{0} на {1}".format(get_text_by_language("language_changed", lang_code), lang_code))
+    await callback_query.message.answer(get_text_by_language("settings", lang_code), reply_markup=await get_settings_keyboard_by_language(lang_code))

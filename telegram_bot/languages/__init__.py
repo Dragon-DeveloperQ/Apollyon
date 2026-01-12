@@ -17,7 +17,15 @@ def get_commands(command_name):
         commands.append(i[command_name])
     return commands
 
-def get_text_by_language(lang_code, text_key):
-    if lang_code in languages_menu_list:
-        return languages_menu_list[lang_code].get(text_key, "")
-    return "TEXT NOT FOUND"
+def get_text_by_language(text_key, lang_code):
+    
+    if lang_code not in languages_menu_list:
+        return "LANGUAGE_NOT_FOUND"
+    
+    texts = languages_menu_list.get(lang_code)
+
+    if text_key not in texts:
+        return "TEXT_NOT_FOUND"
+    
+    text = texts.get(text_key)
+    return text

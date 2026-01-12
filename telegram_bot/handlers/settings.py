@@ -4,6 +4,7 @@ from aiogram.filters import Command
 
 from telegram_bot.keyboards.main import get_settings_language_keyboard, get_settings_keyboard_by_language
 from telegram_bot.languages import get_commands, get_text_by_language
+from database.interactions import reset_user_character
 
 import sys
 from pathlib import Path
@@ -23,6 +24,11 @@ async def settings_handler(message: Message, logger, language_code):
 async def language_handler(message: Message, logger, language_code):
     logger.debug("Открытие выбора языка для пользователя %s", message.from_user.id)
     await message.answer(get_text_by_language("choose_language", language_code), reply_markup=get_settings_language_keyboard())
+
+@router.message(F.text.in_(get_commands("reset_character")))
+async def settings_command_handler(message: Message, logger, language_code):
+    logger.debug("Сброс персонажа для пользователя %s", message.from_user.id)
+    await reset_user_character(message.from_user.id)
 
 
 @router.callback_query(lambda c: c.data and c.data.startswith("lang:"))

@@ -9,7 +9,7 @@ menu_buttons = {
 "delete_task" : "🗑 Delete Task",
 "notifications" : "🔔 Notifications",
 "language" : "🇷🇺🇺🇦🇺🇸 Language",
-"delete_character" : "❌ Delete Character",
+"reset_character" : "❌ Reset Character",
 }
 
 

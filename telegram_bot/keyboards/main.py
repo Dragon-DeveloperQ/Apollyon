@@ -20,7 +20,8 @@ def get_task_keyboard(language_code="en"):
     return task_keyboard
 
 
-def get_profile_keyboard(language_code="en"):
+def get_profile_keyboard(telegram_id: int):
+    language_code = get_user_language_by_telegram_id(telegram_id)
     profile_keyboard_list = [
         [KeyboardButton(text=languages_menu_list[language_code]["back"])]
     ]

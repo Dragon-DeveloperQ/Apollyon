@@ -8,5 +8,6 @@ from telegram_bot.languages import get_commands
 router = Router()
 
 @router.message(F.text.in_(get_commands("profile")))
-async def start_handler(message: Message):
+async def start_handler(message: Message, logger):
+    logger.debug("Демонастрация профиля пользователя %s", message.from_user.id)
     await message.answer("Ваш профиль: ", reply_markup= await get_profile_keyboard(message.from_user.id))

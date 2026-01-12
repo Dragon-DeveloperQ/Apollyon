@@ -8,5 +8,6 @@ from telegram_bot.languages import get_commands
 router = Router()
 
 @router.message(F.text.in_(get_commands("tasks")))
-async def task_handler(message: Message):
+async def task_handler(message: Message, logger):
+    logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
     await message.answer("Ваши задания: ", reply_markup= await get_task_keyboard(message.from_user.id))

@@ -1,6 +1,7 @@
 # Для получение файловых импортов из соседних директорий
 import sys
 from pathlib import Path
+
 ROOT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
@@ -10,8 +11,9 @@ import asyncio
 from aiogram import Bot, Dispatcher
 
 # Local imports
+import middlewares
 import handlers
-import logger as logger
+import logger
 import database
 
 # Initialize logger
@@ -42,7 +44,10 @@ async def main() -> None:
     handlers.include_handlers(dp)
     aiogram_logger.info("Хендлеры подключены.")
 
-    # await database.interactions.register_new_user(7991755414, "Quro")
+    middlewares.include_middlewares(dp)
+    aiogram_logger.info("Middlewares подключены.")
+    
+    await database.interactions.register_new_user(1603284838, "Даша")
 
     # await database.interactions.reward_task_completion(1)
 

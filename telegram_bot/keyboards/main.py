@@ -17,6 +17,13 @@ async def get_main_keyboard(language_code: str):
     return main_keyboard
 
 
+'''
+------------------------------------------------------------
+                        ЗАДАНИЯ
+------------------------------------------------------------
+'''
+
+
 async def get_task_keyboard(language_code: str):
     task_keyboard_list = [
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["new_task"])],
@@ -25,6 +32,27 @@ async def get_task_keyboard(language_code: str):
     ]
     task_keyboard = ReplyKeyboardMarkup(keyboard=task_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
     return task_keyboard
+
+async def task_creation_keyboard1(language_code: str):
+    task_creation_keyboard_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["cancel_task_creation"])]
+    ]
+    task_creation_keyboard = ReplyKeyboardMarkup(keyboard=task_creation_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
+    return task_creation_keyboard
+
+async def task_creation_keyboard2(language_code: str):
+    task_creation_keyboard_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["skip_description"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["cancel_task_creation"])]
+    ]
+    task_creation_keyboard = ReplyKeyboardMarkup(keyboard=task_creation_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
+    return task_creation_keyboard
+
+'''
+------------------------------------------------------------
+                        ПРОФИЛЬ     
+------------------------------------------------------------
+'''
 
 
 async def get_profile_keyboard(language_code: str):
@@ -40,6 +68,7 @@ async def get_profile_keyboard(language_code: str):
                         НАСТРОЙКИ
 ------------------------------------------------------------
 '''
+
 
 async def get_settings_keyboard_by_telegram_id(telegram_id: int):
     language_code = await get_user_language(telegram_id)

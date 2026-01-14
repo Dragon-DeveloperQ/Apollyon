@@ -4,7 +4,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from telegram_bot.keyboards.main import get_task_keyboard
+from telegram_bot.keyboards.main import get_task_keyboard, task_creation_keyboard1, task_creation_keyboard2
 from telegram_bot.languages import get_commands, get_text_by_language
 from database.interactions import create_task_for_character_by_telegram_id
 
@@ -26,7 +26,7 @@ async def new_task_handler(message: Message, state: FSMContext, logger, language
     logger.debug("Начато создание нового задания пользователем %s", message.from_user.id)
 
     await state.set_state(NewTask.waiting_for_name)
-    await message.reply(get_text_by_language("new_task_prompt", language_code))
+    await message.reply(get_text_by_language("new_task_prompt", language_code), reply_markup= await task_creation_keyboard1(language_code))
 
 
 @router.message(NewTask.waiting_for_name)
@@ -43,11 +43,18 @@ async def process_name(message: Message, state: FSMContext, logger, language_cod
         await message.answer(get_text_by_language("new_task_name_too_long", language_code))
         return
 
+    if text in get_commands("cancel_task_creation"):
+        await state.clear()
+        await message.reply("Создание задания отменено.", reply_markup= await get_task_keyboard(language_code))
+        await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        return
+
+    
     # Сохраняем имя в хранилище состояний
     await state.update_data(name=text)
     await state.set_state(NewTask.waiting_for_description)
 
-    await message.reply(get_text_by_language("new_task_description_prompt", language_code))
+    await message.reply(get_text_by_language("new_task_description_prompt", language_code), reply_markup= await task_creation_keyboard2(language_code))
 
 
 @router.message(NewTask.waiting_for_description)
@@ -55,14 +62,20 @@ async def process_description(message: Message, state: FSMContext, logger, langu
     logger.debug("Получено описание задания от пользователя %s: %s", message.from_user.id, message.text)
 
     text = (message.text or "").strip()
-    if not text:
-        await message.answer(get_text_by_language("new_task_description_empty", language_code))
-        return
 
     # Проверка длины описания
     if len(text) > 1000:
         await message.answer(get_text_by_language("new_task_description_too_long", language_code))
         return
+
+    if text in get_commands("cancel_task_creation"):
+        await state.clear()
+        await message.reply("Создание задания отменено.", reply_markup= await get_task_keyboard(language_code))
+        await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        return
+    
+    if text in get_commands("skip_description"):
+        text = ""
 
     # Получаем имя из хранилища состояний
     data = await state.get_data()
@@ -76,3 +89,14 @@ async def process_description(message: Message, state: FSMContext, logger, langu
 
     # Сбрасываем состояние
     await state.clear()
+
+
+'''
+@router.message(F.text.in_(get_commands("cancel_task_creation")))
+async def cancel_task_creation(message: Message, state: FSMContext, logger, language_code):
+    logger.debug("Пользователь %s отменил создание задания", message.from_user.id)
+
+    await state.clear()
+    await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+
+'''

@@ -10,6 +10,9 @@ menu_buttons = {
 "notifications" : "🔔 Notifications",
 "language" : "🇷🇺🇺🇦🇺🇸 Language",
 "reset_character" : "❌ Reset Character",
+
+"cancel_task_creation" : "❌ Cancel Task Creation",
+"skip_description" : "➡️ Skip Description",
 }
 
 

@@ -1,11 +1,6 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram_bot.languages import languages_menu_buttons_list
 
-import sys
-from pathlib import Path
-ROOT_DIR = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT_DIR))
-
 from database.interactions import get_user_language
 
 async def get_main_keyboard(language_code: str):

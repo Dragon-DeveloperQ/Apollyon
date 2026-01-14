@@ -3,11 +3,6 @@ import database
 import logger as logger
 import asyncio
 
-import sys
-from pathlib import Path
-ROOT_DIR = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT_DIR))
-
 import core.task
 
 from . import change

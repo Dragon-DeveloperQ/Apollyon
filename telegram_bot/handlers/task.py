@@ -90,13 +90,3 @@ async def process_description(message: Message, state: FSMContext, logger, langu
     # Сбрасываем состояние
     await state.clear()
 
-
-'''
-@router.message(F.text.in_(get_commands("cancel_task_creation")))
-async def cancel_task_creation(message: Message, state: FSMContext, logger, language_code):
-    logger.debug("Пользователь %s отменил создание задания", message.from_user.id)
-
-    await state.clear()
-    await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
-
-'''

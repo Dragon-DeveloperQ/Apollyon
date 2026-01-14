@@ -1,7 +1,5 @@
 import sys
 from pathlib import Path
-ROOT_DIR = Path(__file__).parent.parent
-sys.path.insert(0, str(ROOT_DIR))
 
 from logger import loggerMiddleware
 from database.interactions import get_user_language, register_new_user

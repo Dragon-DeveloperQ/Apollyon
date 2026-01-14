@@ -11,6 +11,8 @@ menu_buttons = {
 "language" : "🇷🇺🇺🇦🇺🇸 Язык",
 "reset_character" : "❌ Сбросить персонажа",
 
+"show_tasks" : "📋 Показать задания",
+
 "cancel_task_creation" : "❌ Отменить создание задания",
 "skip_description" : "➡️ Пропустить описание",
 }

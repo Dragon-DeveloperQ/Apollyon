@@ -1,7 +1,5 @@
-from sqlalchemy import Column
 import database
 import logger as logger
-import asyncio
 
 import core.task
 
@@ -47,7 +45,7 @@ async def create_task_for_character(character_id: int, title: str, description=N
     Создает задание для персонажа с заданным character_id.
     '''
     
-    db_logger.info(f"Создание задания для character_id={character_id}: title='{title}'...")
+    db_logger.debug(f"Создание задания для character_id={character_id}: title='{title}'...")
 
     try:
         async with database.db.async_session_maker() as session:
@@ -77,7 +75,7 @@ async def create_task_for_character_by_telegram_id(telegram_id: int, title: str,
     Создает задание для персонажа пользователя с заданным telegram_id.
     '''
     
-    db_logger.info(f"Создание задания для пользователя telegram_id={telegram_id}: title='{title}'...")
+    db_logger.debug(f"Создание задания для пользователя telegram_id={telegram_id}: title='{title}'...")
 
     try:
         async with database.db.async_session_maker() as session:
@@ -105,6 +103,7 @@ async def create_task_for_character_by_telegram_id(telegram_id: int, title: str,
 
     except Exception as e:
         db_logger.error(f"Ошибка при создании задания для пользователя telegram_id={telegram_id}: {e}")
+
 
 # --------- Получение награды за задание ---------
 async def reward_task_completion(task_id: int):
@@ -226,6 +225,39 @@ async def get_all_tasks_for_character(character_id: int):
 
     except Exception as e:
         db_logger.error(f"Ошибка при получении заданий для character_id={character_id}: {e}")
+        return None
+async def get_all_tasks_for_character_by_telegram_id(telegram_id: int):
+    '''
+    Получает все задания для персонажа пользователя с заданным telegram_id.
+    Возвращает список заданий или None в случае ошибки.
+    '''
+
+    db_logger.info(f"Получение всех заданий для пользователя telegram_id={telegram_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+                if user is None:
+                    db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Невозможно получить задания.")
+                    return None
+
+                character = await read.get_character_by_user_id(session, db_logger, user.id)
+                if character is None:
+                    db_logger.error(f"Персонаж пользователя с telegram_id={telegram_id} не найден. Невозможно получить задания.")
+                    return None
+
+                result = await session.execute(
+                    read.select(Task).where(Task.character_id == character.id)
+                )
+                tasks = result.scalars().all()
+
+                db_logger.info(f"Получено {len(tasks)} заданий для пользователя telegram_id={telegram_id}.")
+                return tasks
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при получении заданий для пользователя telegram_id={telegram_id}: {e}")
         return None
 
 

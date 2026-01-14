@@ -6,7 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 from telegram_bot.keyboards.main import get_task_keyboard, task_creation_keyboard1, task_creation_keyboard2
 from telegram_bot.languages import get_commands, get_text_by_language
-from database.interactions import create_task_for_character_by_telegram_id
+from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id
 
 router = Router()
 
@@ -18,7 +18,9 @@ class NewTask(StatesGroup):
 @router.message(F.text.in_(get_commands("tasks")))
 async def task_handler(message: Message, logger, language_code):
     logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
-    await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+    await show_tasks_handler(message, logger, language_code)
+    
+    
 
 
 @router.message(F.text.in_(get_commands("new_task")))
@@ -87,6 +89,25 @@ async def process_description(message: Message, state: FSMContext, logger, langu
 
     await message.answer(get_text_by_language("task_created_successfully", language_code), reply_markup= await get_task_keyboard(language_code))
 
+    await show_tasks_handler(message, logger, language_code)
+
     # Сбрасываем состояние
     await state.clear()
 
+
+@router.message(F.text.in_(get_commands("show_tasks")))
+async def show_tasks_handler(message: Message, logger, language_code):
+    logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
+    await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+    
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+    
+    '''
+    Сюда добавить обработку случая, когда заданий нет
+    и вернуть ответ в стиле шаблона из языкового файла
+    '''
+    for i in range(len(tasks)):
+        if i == len(tasks) - 1:
+            await message.answer(f"{i+1}) <b>{tasks[i].title}</b>\n\n{tasks[i].description}", parse_mode="HTML", reply_markup= await get_task_keyboard(language_code))
+        else:
+            await message.answer(f"{i+1}) <b>{tasks[i].title}</b>\n\n{tasks[i].description}", parse_mode="HTML")

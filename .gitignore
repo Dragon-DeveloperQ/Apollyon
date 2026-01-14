@@ -4,3 +4,4 @@ __pycache__/
 *.log
 .obsidian/
 database/tables/
+directorys.py

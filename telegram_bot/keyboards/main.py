@@ -21,12 +21,19 @@ async def get_main_keyboard(language_code: str):
 
 async def get_task_keyboard(language_code: str):
     task_keyboard_list = [
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["new_task"])],
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["change_task"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["start_task"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["new_task"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["change_task"])],
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["back"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["delete_task"])]
     ]
     task_keyboard = ReplyKeyboardMarkup(keyboard=task_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
     return task_keyboard
+
+async def task_completion_keyboard1(language_code: str):
+    task_completion_keyboard_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["back"])]
+    ]
+    task_completion_keyboard = ReplyKeyboardMarkup(keyboard=task_completion_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
+    return task_completion_keyboard
 
 async def task_creation_keyboard1(language_code: str):
     task_creation_keyboard_list = [
@@ -42,6 +49,20 @@ async def task_creation_keyboard2(language_code: str):
     ]
     task_creation_keyboard = ReplyKeyboardMarkup(keyboard=task_creation_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
     return task_creation_keyboard
+
+async def complete_task_keyboard1(language_code: str):
+    complete_task_keyboard_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["cancel_task_execution"])]
+    ]
+    complete_task_keyboard = ReplyKeyboardMarkup(keyboard=complete_task_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
+    return complete_task_keyboard
+
+async def complete_task_keyboard2(language_code: str):
+    complete_task_keyboard_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["complete_task"])]
+    ]
+    complete_task_keyboard = ReplyKeyboardMarkup(keyboard=complete_task_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
+    return complete_task_keyboard
 
 '''
 ------------------------------------------------------------

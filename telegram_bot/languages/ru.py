@@ -10,6 +10,9 @@ menu_buttons = {
 "notifications" : "🔔 Уведомления",
 "language" : "🇷🇺🇺🇦🇺🇸 Язык",
 "reset_character" : "❌ Сбросить персонажа",
+"start_task" : "▶️ Начать задание",
+"complete_task" : "✅ Завершить задание",
+"cancel_task_execution" : "❌ Отменить выполнение",
 
 "show_tasks" : "📋 Показать задания",
 
@@ -32,6 +35,9 @@ text = {
 "new_task_name_too_long" : "Слишком длинное название (макс. 100 символов). Пожалуйста, введите название ещё раз:",
 "new_task_description_too_long" : "Слишком длинное описание (макс. 1000 символов). Пожалуйста, введите описание ещё раз:",
 "task_created_successfully" : "Задание успешно создано!",
+"enter_task_number" : "Введите номер задания: ",
+"task_completion" : "Завершение задания.",
+"cancel_task_execution" : "Завершение задания отменено.",
 
 "profile_info" : 
     "{username}\n"

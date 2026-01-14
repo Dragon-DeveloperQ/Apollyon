@@ -204,7 +204,7 @@ async def get_all_tasks_for_character(character_id: int):
     Возвращает список заданий или None в случае ошибки.
     '''
 
-    db_logger.info(f"Получение всех заданий для character_id={character_id}...")
+    db_logger.debug(f"Получение всех заданий для character_id={character_id}...")
 
     try:
         async with database.db.async_session_maker() as session:
@@ -232,7 +232,7 @@ async def get_all_tasks_for_character_by_telegram_id(telegram_id: int):
     Возвращает список заданий или None в случае ошибки.
     '''
 
-    db_logger.info(f"Получение всех заданий для пользователя telegram_id={telegram_id}...")
+    db_logger.debug(f"Получение всех заданий для пользователя telegram_id={telegram_id}...")
 
     try:
         async with database.db.async_session_maker() as session:

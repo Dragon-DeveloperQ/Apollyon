@@ -51,21 +51,22 @@ async def create_task_for_character(character_id: int, title: str, description=N
     '''
     Создает задание для персонажа с заданным character_id.
     '''
-
+    
     db_logger.info(f"Создание задания для character_id={character_id}: title='{title}'...")
 
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():
-
                 # Проверяем, существует ли персонаж и задание           
-                character = await read.get_character_by_user_id(session, db_logger, character_id)
+                character = await read.get_character_by_id(session, db_logger, character_id)
                 task = await read.get_task_by_title_and_character(session, db_logger, title, character_id)
 
                 if character is None:
                     db_logger.error(f"Персонаж с id={character_id} не найден. Задание не создано.")
+                    raise Exception("Персонаж не найден.")
                 if task is not None:
-                    db_logger.warning(f"Задание для character_id={character_id} под именем '{title}' уже существует. Новое задание не создано.")    
+                    db_logger.warning(f"Задание для character_id={character_id} под именем '{title}' уже существует. Новое задание не создано.")
+                    raise Exception("Задание уже существует.")   
                 
                 if character is None or task is not None:
                     raise Exception("Предусловия для создания задания не выполнены.")
@@ -76,7 +77,39 @@ async def create_task_for_character(character_id: int, title: str, description=N
 
     except Exception as e:
         db_logger.error(f"Ошибка при создании задания для character_id={character_id}: {e}")
+async def create_task_for_character_by_telegram_id(telegram_id: int, title: str, description=None):
+    '''
+    Создает задание для персонажа пользователя с заданным telegram_id.
+    '''
+    
+    db_logger.info(f"Создание задания для пользователя telegram_id={telegram_id}: title='{title}'...")
 
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                # Получаем пользователя и персонажа
+                user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+                if user is None:
+                    db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Задание не создано.")
+                    raise Exception("Пользователь не найден.")
+
+                character = await read.get_character_by_user_id(session, db_logger, user.id)
+                if character is None:
+                    db_logger.error(f"Персонаж пользователя с telegram_id={telegram_id} не найден. Задание не создано.")
+                    raise Exception("Персонаж не найден.")
+
+                # Проверяем, существует ли задание
+                task = await read.get_task_by_title_and_character(session, db_logger, title, character.id)
+                if task is not None:
+                    db_logger.warning(f"Задание для character_id={character.id} под именем '{title}' уже существует. Новое задание не создано.")    
+                    raise Exception("Задание уже существует.")
+                
+                # Попытка создать задание
+                await create.create_task(session, db_logger, character_id=character.id, title=title, description=description)
+                return task
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при создании задания для пользователя telegram_id={telegram_id}: {e}")
 
 # --------- Получение награды за задание ---------
 async def reward_task_completion(task_id: int):
@@ -141,7 +174,7 @@ async def reward_task_completion(task_id: int):
         db_logger.error(f"Ошибка при выдаче награды за задание id={task_id}: {e}")
 
 
-# ---------- Удаление задания ----------
+# --------- Удаление задания ----------
 async def delete_task(task_id: int):
     '''
     Удаляет задание с заданным task_id.

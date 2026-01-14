@@ -23,7 +23,7 @@ async def get_task_keyboard(language_code: str):
     task_keyboard_list = [
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["new_task"])],
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["change_task"])],
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["back"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["reset_character"])]
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["back"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["delete_task"])]
     ]
     task_keyboard = ReplyKeyboardMarkup(keyboard=task_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
     return task_keyboard

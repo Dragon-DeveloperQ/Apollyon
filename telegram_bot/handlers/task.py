@@ -72,7 +72,7 @@ async def process_name(message: Message, state: FSMContext, logger, language_cod
     if text in get_commands("cancel_task_creation"):
         await state.clear()
         await message.reply("Создание задания отменено.", reply_markup= await get_task_keyboard(language_code))
-        await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        await show_tasks_handler(message, logger, language_code)
         return
 
     
@@ -96,7 +96,7 @@ async def process_description(message: Message, state: FSMContext, logger, langu
     if text in get_commands("cancel_task_creation"):
         await state.clear()
         await message.reply("Создание задания отменено.", reply_markup= await get_task_keyboard(language_code))
-        await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        await show_tasks_handler(message, logger, language_code)
         return
     
     if text in get_commands("skip_description"):
@@ -127,6 +127,24 @@ async def process_description(message: Message, state: FSMContext, logger, langu
 async def complete_task_handler(message: Message, state: FSMContext, logger, language_code):
     logger.debug("Начато завершение задания пользователем %s", message.from_user.id)
 
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+    if not tasks:
+        await message.answer("У вас нет заданий для выполнения.", reply_markup= await get_task_keyboard(language_code))
+        return
+    elif len(tasks) == 1:
+        selected_task = tasks[0]
+        logger.info("Задание %s начато пользователем %s", selected_task.title, message.from_user.id)
+    
+        await state.update_data(task_number=1)
+        '''
+        --------------------------------------------------------------
+                Добавить шаблон текста в языковой файл
+        --------------------------------------------------------------
+        '''
+        await message.answer(f"Задание <b>{selected_task.title}</b> начато!", parse_mode="HTML", reply_markup= await complete_task_keyboard2(language_code))
+        await state.set_state(CompletedTask.waiting_for_task_completion)
+        return
+
     await state.set_state(CompletedTask.waiting_for_task_selection)
     await message.reply(get_text_by_language("enter_task_number", language_code), reply_markup= await complete_task_keyboard1(language_code))
 
@@ -139,7 +157,7 @@ async def process_task_selection(message: Message, state: FSMContext, logger, la
     if text in get_commands("cancel_task_execution"):
         await state.clear()
         await message.reply(get_text_by_language("cancel_task_execution", language_code))
-        await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        await show_tasks_handler(message, logger, language_code)
         return
 
     if not text.isdigit():
@@ -174,14 +192,14 @@ async def process_task_completion(message: Message, state: FSMContext, logger, l
     if text in get_commands("cancel_task_execution"):
         await state.clear()
         await message.reply(get_text_by_language("cancel_task_execution", language_code))
-        await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        await show_tasks_handler(message, logger, language_code)
 
         logger.debug("Выполнение задания отменено пользователем %s", message.from_user.id)
         return
     
     if text in get_commands("complete_task"):
         await message.reply(get_text_by_language("task_completion", language_code))
-        await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        await show_tasks_handler(message, logger, language_code)
 
         data = await state.get_data()
         task_id_by_character = int(data.get("task_number"))

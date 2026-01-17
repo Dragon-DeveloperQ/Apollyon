@@ -6,7 +6,9 @@ from aiogram.fsm.state import State, StatesGroup
 
 from telegram_bot.keyboards.main import get_task_keyboard, task_creation_keyboard1, task_creation_keyboard2, complete_task_keyboard1, complete_task_keyboard2
 from telegram_bot.languages import get_commands, get_text_by_language
-from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id, reward_task_completion
+from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id, activate_task, deactivate_task
+
+from datetime import datetime, timezone
 
 router = Router()
 
@@ -134,8 +136,10 @@ async def complete_task_handler(message: Message, state: FSMContext, logger, lan
     elif len(tasks) == 1:
         selected_task = tasks[0]
         logger.info("Задание %s начато пользователем %s", selected_task.title, message.from_user.id)
-    
+        await activate_task(selected_task.id)
+
         await state.update_data(task_number=1)
+
         '''
         --------------------------------------------------------------
                 Добавить шаблон текста в языковой файл
@@ -174,6 +178,7 @@ async def process_task_selection(message: Message, state: FSMContext, logger, la
         return
 
     selected_task = tasks[task_number - 1]
+    await activate_task(selected_task.id)
 
     logger.info("Задание %s начато пользователем %s", selected_task.title, message.from_user.id)
 
@@ -183,6 +188,8 @@ async def process_task_selection(message: Message, state: FSMContext, logger, la
     --------------------------------------------------------------
     '''
     await message.answer(f"Задание <b>{selected_task.title}</b> начато!", parse_mode="HTML", reply_markup= await complete_task_keyboard2(language_code))
+    
+    
     await state.set_state(CompletedTask.waiting_for_task_completion)
 
 @router.message(CompletedTask.waiting_for_task_completion)
@@ -206,8 +213,8 @@ async def process_task_completion(message: Message, state: FSMContext, logger, l
 
         tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
         task = tasks[task_id_by_character - 1]
-
-        await reward_task_completion(task_id=task.id)
+        
+        await deactivate_task(task_id=task.id)
         await state.clear()
 
         logger.debug("Задание %s завершено пользователем %s", task.title, message.from_user.id)

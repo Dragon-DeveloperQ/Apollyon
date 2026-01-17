@@ -105,6 +105,31 @@ async def create_task_for_character_by_telegram_id(telegram_id: int, title: str,
         db_logger.error(f"Ошибка при создании задания для пользователя telegram_id={telegram_id}: {e}")
 
 
+# --------- Статус задания ----------
+async def activate_task(task_id: int):
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                # Смена состояния задания на активное
+                await change.change_task_active_state(session, db_logger, task_id, is_active=True)
+                # Установить время начала задания
+                await change.set_task_started_at(session, db_logger, task_id)
+        
+    except Exception as e:
+        db_logger.error(f"Ошибка при активации задания id={task_id}: {e}")
+async def deactivate_task(task_id: int):
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                # Смена состояния задания на неактивное
+                await change.change_task_active_state(session, db_logger, task_id, is_active=False)
+                # Установить последнее время выполнения задания
+                await change.set_task_completed_at(session, db_logger, task_id)
+        
+        await reward_task_completion(task_id)
+    except Exception as e:
+        db_logger.error(f"Ошибка при деактивации задания id={task_id}: {e}")
+
 # --------- Получение награды за задание ---------
 async def reward_task_completion(task_id: int):
     '''
@@ -127,6 +152,14 @@ async def reward_task_completion(task_id: int):
                     db_logger.error(f"Задание с id={task_id} не найдено. Награда не выдана.")
                     return None
 
+
+                '''
+                -------------------------------------------------------------------------------------
+                Тут нужна проверка на время выполнения задания
+                Проверка, не опоздал ли пользователь, в таком случае сброс стрика
+                Проверка, не выполнялось ли задание уже сегодня, в таком случае не увеличиваем стрик
+                -------------------------------------------------------------------------------------
+                '''
                 # Увеличение streak при надобности
                 streak = await change.increment_task_streak(session, db_logger, task_id)
                 if streak is None:
@@ -158,14 +191,34 @@ async def reward_task_completion(task_id: int):
                 if reward is None:
                     db_logger.error(f"Ошибка при расчете награды для задания id={task_id}. Награда не выдана.")
                     raise Exception("Ошибка расчета награды")
-                
+
                 # Выдача награды персонажу
                 await change.update_task_reward(session, db_logger, task.character_id, reward)
                 db_logger.debug(f"Награда за выполнение задания id={task_id} успешно выдана: reward={reward}")
+                
                 return reward
             
     except Exception as e:
         db_logger.error(f"Ошибка при выдаче награды за задание id={task_id}: {e}")
+
+
+    '''
+    Активирует задание с заданным task_id.
+    '''
+
+    db_logger.info(f"Активация задания id={task_id}...")
+
+    task = await read.get_task_by_id(session, db_logger, task_id)
+    if task is None:
+        db_logger.error(f"Задание с id={task_id} не найдено. Активация не выполнена.")
+        return None
+
+    task.is_active = True
+    session.add(task)
+    await session.flush()
+
+    db_logger.info(f"Задание id={task_id} успешно активировано.")
+    return task.is_active
 
 
 # --------- Удаление задания ----------

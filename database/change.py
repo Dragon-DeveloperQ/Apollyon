@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import update, select
 from sqlalchemy.exc import NoResultFound
 
@@ -21,9 +23,7 @@ async def update_task_difficulty_average(session, logger, task_id: int, new_diff
     session.add(task)
     await session.flush()
 
-    logger.debug(f"Средняя сложность задания обновлена: id={task.id}, difficultyAVG={task.difficultyAVG}")
     return float(task.difficultyAVG)
-
 
 
 # --------- Получение награды за задание ---------
@@ -43,6 +43,46 @@ async def update_task_reward(session, logger, character_id: int, reward: float):
     return reward
 
 
+# --------- Смена состояния задания ---------
+async def change_task_active_state(session, logger, task_id: int, is_active: bool):
+    
+    task = await read.get_task_by_id(session, logger, task_id)
+    if task is None:
+        logger.error(f"Задание с id={task_id} не найдено. Состояние не изменено.")
+        return None
+    
+    task.is_active = is_active
+    session.add(task)
+    await session.flush()
+
+    return task.is_active
+async def set_task_started_at(session, logger, task_id: int):
+    
+    task = await read.get_task_by_id(session, logger, task_id)
+    if task is None:
+        logger.error(f"Задание с id={task_id} не найдено. Время начала не установлено.")
+        return None
+    
+    task.started_at = datetime.now(timezone.utc)
+    session.add(task)
+    await session.flush()
+    
+    return task.started_at
+
+# --------- Установить последнее время выполнения задания ---------
+async def set_task_completed_at(session, logger, task_id: int):
+    
+    task = await read.get_task_by_id(session, logger, task_id)
+    if task is None:
+        logger.error(f"Задание с id={task_id} не найдено. Время выполнения не установлено.")
+        return None
+    
+    task.completed_at = datetime.now(timezone.utc)
+    session.add(task)
+    await session.flush()
+    
+    return task.completed_at
+
 
 # --------- Увеличение стрика задания ---------
 async def increment_task_streak(session, logger, task_id: int):
@@ -52,17 +92,10 @@ async def increment_task_streak(session, logger, task_id: int):
         logger.error(f"Задание с id={task_id} не найдено. Стрик не увеличен.")
         return None
     
-    '''
-    -------------------------------------------------------------------------------------
-    Тут нужна проверка на время выполнения задания
-    Проверка, не опоздал ли пользователь, в таком случае сброс стрика
-    Проверка, не выполнялось ли задание уже сегодня, в таком случае не увеличиваем стрик
-    -------------------------------------------------------------------------------------
-    '''
+    
     
     task.streak += 1
     session.add(task)
     await session.flush()
     
-    logger.debug(f"Стрик задания увеличен: id={task.id}, streak={task.streak}")
     return task.streak

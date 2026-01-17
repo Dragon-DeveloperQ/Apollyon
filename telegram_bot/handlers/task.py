@@ -10,6 +10,12 @@ from database.interactions import create_task_for_character_by_telegram_id, get_
 
 from datetime import datetime, timezone
 
+from os import getenv
+from dotenv import load_dotenv
+
+load_dotenv("../config/core.env")
+MAX_TASKS = int(getenv("MAX_TASKS", "20")) 
+
 router = Router()
 
 class NewTask(StatesGroup):
@@ -34,20 +40,15 @@ async def show_tasks_handler(message: Message, logger, language_code):
     и вернуть ответ в стиле шаблона из языкового файла
     '''
     for i in range(len(tasks)):
+        text = f"{i+1}) " + get_text_by_language("tasks_handler", language_code).format(
+                taskname=tasks[i].title,
+                discription=tasks[i].description,
+                difficulty=round(tasks[i].difficultyAVG,2),
+                streak=tasks[i].streak)
         if i == len(tasks) - 1:
-            await message.answer(f"{i+1}) " + get_text_by_language("tasks_handler", language_code).format(
-                taskname=tasks[i].title,
-                discription=tasks[i].description,
-                difficulty=tasks[i].difficultyAVG,
-                streak=tasks[i].streak
-            ), reply_markup= await get_task_keyboard(language_code))
+            await message.answer(text, reply_markup= await get_task_keyboard(language_code))
         else:
-            await message.answer(f"{i+1}) " + get_text_by_language("tasks_handler", language_code).format(
-                taskname=tasks[i].title,
-                discription=tasks[i].description,
-                difficulty=tasks[i].difficultyAVG,
-                streak=tasks[i].streak
-            ))
+            await message.answer(text)
 
 
 '''
@@ -58,6 +59,12 @@ async def show_tasks_handler(message: Message, logger, language_code):
 @router.message(F.text.in_(get_commands("new_task")))
 async def new_task_handler(message: Message, state: FSMContext, logger, language_code):
     logger.debug("Начато создание нового задания пользователем %s", message.from_user.id)
+
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+    if len(tasks) >= MAX_TASKS:
+        await message.answer(get_text_by_language("max_tasks_reached", language_code).format(max_tasks=MAX_TASKS), reply_markup= await get_task_keyboard(language_code))
+        logger.info("Пользователь %s достиг максимального количества заданий", message.from_user.id)
+        return
 
     await state.set_state(NewTask.waiting_for_name)
     await message.reply(get_text_by_language("new_task_prompt", language_code), reply_markup= await task_creation_keyboard1(language_code))

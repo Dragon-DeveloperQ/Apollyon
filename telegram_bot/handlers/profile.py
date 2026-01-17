@@ -13,7 +13,12 @@ async def start_handler(message: Message, logger, language_code):
     logger.debug("Демонстрация профиля пользователя %s", message.from_user.id)
     try:
         stats = await get_character_stats(message.from_user.id)
-        profile_text = get_text_by_language("profile_info", language_code).format(**stats)
+        profile_text = get_text_by_language("profile_info", language_code).format(
+            username = stats['username'], 
+            level = stats['level'], 
+            exp = round(float(stats['exp']), 2), 
+            gold = round(float(stats['gold']), 2)
+            )
     except Exception as e:
         logger.error("Ошибка при получении информации профиля для пользователя %s: %s", message.from_user.id, str(e))
         profile_text = get_text_by_language("profile_info", language_code).format(name="Unknown", level=0, experience=0, gold=0)

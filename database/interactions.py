@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+import math
+from turtle import title
 import database
 import logger as logger
 
@@ -10,6 +13,11 @@ from . import read
 from .models import Task
 from database.db import db_logger
 
+from os import getenv
+from dotenv import load_dotenv
+
+load_dotenv("../config/core.env")
+TIME_TO_EARN_DIFFICULTY = int(getenv("TIME_TO_EARN_DIFFICULTY", "1800"))  # В секундах, по умолчанию 30 минут
 
 # --------- Регистрация нового пользователя ---------
 async def register_new_user(telegram_id: int, username: str):
@@ -110,6 +118,9 @@ async def activate_task(task_id: int):
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():
+                if await read.get_task_active_state(session, db_logger, task_id):
+                    db_logger.warning(f"Задание id={task_id} уже было активно.")
+                    return
                 # Смена состояния задания на активное
                 await change.change_task_active_state(session, db_logger, task_id, is_active=True)
                 # Установить время начала задания
@@ -125,13 +136,64 @@ async def deactivate_task(task_id: int):
                 await change.change_task_active_state(session, db_logger, task_id, is_active=False)
                 # Установить последнее время выполнения задания
                 await change.set_task_completed_at(session, db_logger, task_id)
-        
-        await reward_task_completion(task_id)
+                
+                difficulty = await calculate_task_difficulty(session, task_id)
+                if difficulty is None:
+                    db_logger.error(f"Ошибка при расчете сложности задания id={task_id}. Невозможно деактивировать задание.")
+                    return None
+                if difficulty < 1:
+                    db_logger.info(f"Недостаточная сложность для деактивации задания id={task_id}. Требуется минимум 1, получено {difficulty}.")
+                    return None
+                
+                reward = await reward_task_completion(session, task_id, difficulty)
+
+                stats = {
+                    "difficulty": difficulty,
+                    "reward": reward
+                }
+                return stats
     except Exception as e:
         db_logger.error(f"Ошибка при деактивации задания id={task_id}: {e}")
+        return { "difficulty": "ERROR", "reward": "ERROR" }
+async def hard_deactivate_task(task_id: int):
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                # Смена состояния задания на неактивное
+                await change.change_task_active_state(session, db_logger, task_id, is_active=False)
+    except Exception as e:
+        db_logger.error(f"Ошибка при намереной деактивации задания id={task_id}: {e}")
+
+# --------- Рассчет сложности задания ---------
+async def calculate_task_difficulty(session, task_id: int):
+    #Получение время начала выполненния задания
+    started_at = (await read.get_task_started_at(session, db_logger, task_id)).replace(tzinfo=timezone.utc)
+    complated_at = datetime.now(timezone.utc)
+
+
+    if started_at is None:
+        db_logger.error(f"Время начала задания id={task_id} не установлено. Невозможно рассчитать сложность.")
+        return 1
+    if complated_at is None:
+        db_logger.error(f"Время завершения задания id={task_id} не установлено. Невозможно рассчитать сложность.")
+        return 1  
+
+    # Отнимаем от текущего времени время начала выполнения задания
+    time_difference = complated_at - started_at
+    if time_difference.total_seconds() < 0:
+        db_logger.error(f"Время завершения задания id={task_id} меньше времени начала. Невозможно рассчитать сложность.")
+        return None
+    if time_difference.total_seconds() == 0:
+        db_logger.warning(f"Время выполнения задания id={task_id} равно нулю. Сложность установлена как 0.")
+        return 0
+
+    # Делим на пол часа и округляем в большую сторону
+    difficulty = time_difference.total_seconds() / TIME_TO_EARN_DIFFICULTY
+
+    return difficulty
 
 # --------- Получение награды за задание ---------
-async def reward_task_completion(task_id: int):
+async def reward_task_completion(session, task_id: int, difficulty: int):
     '''
     Получение награды за выполнение задания.
     Требует task_id выполненного задания.
@@ -141,88 +203,59 @@ async def reward_task_completion(task_id: int):
     '''
     
     db_logger.info(f"Награждение за выполнение задания id={task_id} для пользователя...")
-    
-    try:
-        async with database.db.async_session_maker() as session:
-            async with session.begin():
-                # Получаем задание
-                task = await read.get_task_by_id(session, db_logger, task_id)
-
-                if task is None:
-                    db_logger.error(f"Задание с id={task_id} не найдено. Награда не выдана.")
-                    return None
-
-
-                '''
-                -------------------------------------------------------------------------------------
-                Тут нужна проверка на время выполнения задания
-                Проверка, не опоздал ли пользователь, в таком случае сброс стрика
-                Проверка, не выполнялось ли задание уже сегодня, в таком случае не увеличиваем стрик
-                -------------------------------------------------------------------------------------
-                '''
-                # Увеличение streak при надобности
-                streak = await change.increment_task_streak(session, db_logger, task_id)
-                if streak is None:
-                    db_logger.error(f"Не удалось увеличить стрик задания id={task_id}. Награда не выдана.")
-                    raise Exception("Ошибка увеличения стрика")
-
-                # Повторно получаем задание с обновленным стриком
-                task = await read.get_task_by_id(session, db_logger, task_id)
-
-                # Рассчет сложности (заглушка)
-                difficulty = 1
-
-                # Обновление средней сложности задания
-                new_difficulty_avg = core.task.newAverageDifficulty(task.difficultyAVG, difficulty, streak)
-                if new_difficulty_avg is None:
-                    db_logger.error(f"Ошибка при расчете новой средней сложности для задания id={task_id}. Награда не выдана.")
-                    raise Exception("Ошибка расчета новой средней сложности")
-
-                new_difficulty_avg = await change.update_task_difficulty_average(session, db_logger, task_id, new_difficulty_avg)
-                if new_difficulty_avg is None:
-                    db_logger.error(f"Ошибка при обновлении средней сложности для задания id={task_id}. Награда не выдана.")
-                    raise Exception("Ошибка обновления средней сложности")
                 
-                # Повторно получаем задание с обновленным стриком
-                task = await read.get_task_by_id(session, db_logger, task_id)
-
-                # Рассчет нагрды
-                reward = core.task.calculateTaskReward(task.difficultyAVG, difficulty, streak)
-                if reward is None:
-                    db_logger.error(f"Ошибка при расчете награды для задания id={task_id}. Награда не выдана.")
-                    raise Exception("Ошибка расчета награды")
-
-                # Выдача награды персонажу
-                await change.update_task_reward(session, db_logger, task.character_id, reward)
-                db_logger.debug(f"Награда за выполнение задания id={task_id} успешно выдана: reward={reward}")
-                
-                return reward
-            
-    except Exception as e:
-        db_logger.error(f"Ошибка при выдаче награды за задание id={task_id}: {e}")
-
-
-    '''
-    Активирует задание с заданным task_id.
-    '''
-
-    db_logger.info(f"Активация задания id={task_id}...")
-
+    # Получаем задание
     task = await read.get_task_by_id(session, db_logger, task_id)
+
     if task is None:
-        db_logger.error(f"Задание с id={task_id} не найдено. Активация не выполнена.")
+        db_logger.error(f"Задание с id={task_id} не найдено. Награда не выдана.")
         return None
 
-    task.is_active = True
-    session.add(task)
-    await session.flush()
 
-    db_logger.info(f"Задание id={task_id} успешно активировано.")
-    return task.is_active
+    '''
+    -------------------------------------------------------------------------------------
+    Тут нужна проверка на время выполнения задания
+    Проверка, не опоздал ли пользователь, в таком случае сброс стрика
+    Проверка, не выполнялось ли задание уже сегодня, в таком случае не увеличиваем стрик
+    -------------------------------------------------------------------------------------
+    '''
+    # Увеличение streak при надобности
+    streak = await change.increment_task_streak(session, db_logger, task_id)
+    if streak is None:
+        db_logger.error(f"Не удалось увеличить стрик задания id={task_id}. Награда не выдана.")
+        raise Exception("Ошибка увеличения стрика")
+
+    # Повторно получаем задание с обновленным стриком
+    task = await read.get_task_by_id(session, db_logger, task_id)
+
+    # Обновление средней сложности задания
+    new_difficulty_avg = core.task.newAverageDifficulty(task.difficultyAVG, difficulty, streak)
+    if new_difficulty_avg is None:
+        db_logger.error(f"Ошибка при расчете новой средней сложности для задания id={task_id}. Награда не выдана.")
+        raise Exception("Ошибка расчета новой средней сложности")
+    new_difficulty_avg = await change.update_task_difficulty_average(session, db_logger, task_id, new_difficulty_avg)
+    if new_difficulty_avg is None:
+        db_logger.error(f"Ошибка при обновлении средней сложности для задания id={task_id}. Награда не выдана.")
+        raise Exception("Ошибка обновления средней сложности")
+                
+    # Повторно получаем задание с обновленным стриком
+    task = await read.get_task_by_id(session, db_logger, task_id)
+
+    # Рассчет нагрды
+    reward = core.task.calculateTaskReward(task.difficultyAVG, difficulty, streak)
+    if reward is None:
+        db_logger.error(f"Ошибка при расчете награды для задания id={task_id}. Награда не выдана.")
+        raise Exception("Ошибка расчета награды")
+
+    # Выдача награды персонажу
+    await change.update_task_reward(session, db_logger, task.character_id, reward)
+    db_logger.debug(f"Награда за выполнение задания id={task_id} успешно выдана: reward={reward}")
+                
+    return reward
 
 
 # --------- Удаление задания ----------
-async def delete_task(task_id: int):
+async def delete_task(session, task_id: int):
     '''
     Удаляет задание с заданным task_id.
     '''

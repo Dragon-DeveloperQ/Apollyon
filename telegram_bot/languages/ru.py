@@ -36,11 +36,23 @@ text = {
 "new_task_description_too_long" : "Слишком длинное описание (макс. 1000 символов). Пожалуйста, введите описание ещё раз:",
 "task_created_successfully" : "Задание успешно создано!",
 "enter_task_number" : "Введите номер задания: ",
-"task_completion" : "Завершение задания.",
 "cancel_task_execution" : "Завершение задания отменено.",
+
+"insufficient_difficulty" : "Вы накопили недостаточно сложности для завершения этого задания. Пожалуйста, продолжайте работать над ним или отмените выполнение.",
+
+"task_completion" : 
+    "Завершение задания...\n"
+    "Сложность задания: {difficulty}\n"
+    "Вы получили: {reward} золота и опыта!",
 
 "profile_info" : 
     "{username}\n"
     "Уровень: {level} ({exp} exp)\n"
     "Золото: {gold}",
+
+"tasks_handler" :
+    "{taskname}\n"
+    "{discription}\n"
+    "Средняя сложность: {difficulty}\n"
+    "Текущая серия: {streak}\n",
 }

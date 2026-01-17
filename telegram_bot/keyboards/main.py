@@ -59,7 +59,8 @@ async def complete_task_keyboard1(language_code: str):
 
 async def complete_task_keyboard2(language_code: str):
     complete_task_keyboard_list = [
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["complete_task"])]
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["complete_task"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["cancel_task_execution"])]
     ]
     complete_task_keyboard = ReplyKeyboardMarkup(keyboard=complete_task_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
     return complete_task_keyboard

@@ -42,8 +42,29 @@ async def get_task_by_title_and_character(session, logger, title: str, character
 
 # --------- Получить язык пользователя по telegram_id ---------
 async def get_user_language_by_telegram_id(session, logger, telegram_id: int):
+
     result = await session.execute(
         select(User.language_code).where(User.telegram_id == telegram_id)
     )
     language = result.scalar_one_or_none()
     return language
+
+# --------- Получить состояние задания ---------
+async def get_task_active_state(session, logger, task_id: int):
+    result = await session.execute(
+        select(Task).where(Task.id == task_id)
+    )
+    task = result.scalar_one_or_none()
+    if task:
+        return task.is_active
+    return None
+
+# --------- Получить время начало выполнения задания ---------
+async def get_task_started_at(session, logger, task_id: int):
+    result = await session.execute(
+        select(Task).where(Task.id == task_id)
+    )
+    task = result.scalar_one_or_none()
+    if task:
+        return task.started_at
+    return None

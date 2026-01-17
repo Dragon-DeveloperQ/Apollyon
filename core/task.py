@@ -13,5 +13,5 @@ def newAverageDifficulty(dificultyAverage, dificult, streak):
         return None
 
     if streak > 10:
-        return round((dificultyAverage * 0.8 * 9 + dificult) / 10 , 2)
-    return round((dificultyAverage * (streak - 1) + dificult) / streak , 2)
+        return round((dificultyAverage * 0.8 * 9 + dificult) / 10 , 4)
+    return round((dificultyAverage * (streak - 1) + dificult) / streak , 4)

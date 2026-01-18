@@ -10,6 +10,7 @@ menu_buttons = {
 "notifications" : "🔔 Notifications",
 "language" : "🇷🇺🇺🇦🇺🇸 Language",
 "reset_character" : "❌ Reset Character",
+"timezone" : "🌍 Часовой пояс",
 "start_task" : "▶️ Start Task",
 "complete_task" : "✅ Complete Task",
 "cancel_task_execution" : "❌ Cancel Task Execution",
@@ -18,6 +19,8 @@ menu_buttons = {
 
 "cancel_task_creation" : "❌ Cancel Task Creation",
 "skip_description" : "➡️ Skip Description",
+"send_location" : "🗺 Отправить геолокацию",
+"enter_timezone_manually" : "⏰ Ввести часовой пояс вручную"
 }
 
 

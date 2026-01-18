@@ -108,3 +108,12 @@ def get_settings_language_keyboard():
     
     settings_language_keyboard = InlineKeyboardMarkup(inline_keyboard=settings_language_keyboard_list)
     return settings_language_keyboard
+
+def get_settings_timezone_keyboard(language_code: str):
+    settings_timezone_keyboard_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["send_location"], request_location=True)],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["enter_timezone_manually"] )],
+    ]
+    
+    settings_timezone_keyboard = ReplyKeyboardMarkup(keyboard=settings_timezone_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
+    return settings_timezone_keyboard

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Text
+from sqlalchemy import Column, Date, Integer, String, DateTime, ForeignKey, Boolean, Text
 from sqlalchemy.orm import declarative_base, relationship
 
 
@@ -13,7 +13,7 @@ class User(Base):
     telegram_id = Column(Integer, unique=True, nullable=True)
     username = Column(String(255), nullable=True)
     language_code = Column(String(10), default="ru")
-    time_zone = Column(String(50), default="UTC")
+    timezone = Column(String(64), nullable=False, default="UTC")
     
     # Связи с другими моделями
     character = relationship("UserCharacter", back_populates="user", uselist=False)
@@ -61,5 +61,6 @@ class Task(Base):
     completed_at = Column(DateTime(timezone=True), nullable=True)
     started_at  = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=False)
+    completed_date = Column(Date(), nullable=True)
 
     character = relationship("UserCharacter", back_populates="tasks")

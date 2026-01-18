@@ -475,3 +475,30 @@ async def reset_user_character(telegram_id: int):
     except Exception as e:
         db_logger.error(f"Ошибка при сбросе персонажа пользователя telegram_id={telegram_id}: {e}")
         return False
+
+
+# --------- Сохранение часового пояса пользователя ---------
+async def save_user_timezone(telegram_id: int, timezone_name: str):
+    '''
+    Сохраняет часовой пояс пользователя с заданным telegram_id.
+    '''
+
+    db_logger.info(f"Сохранение часового пояса '{timezone_name}' для пользователя telegram_id={telegram_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+                if user is None:
+                    db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Сохранение часового пояса не выполнено.")
+                    return False
+
+                await change.change_user_timezone(session, db_logger, telegram_id, timezone_name)
+
+                db_logger.info(f"Часовой пояс '{timezone_name}' для пользователя telegram_id={telegram_id} успешно сохранен.")
+                return timezone_name
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при сохранении часового пояса для пользователя telegram_id={telegram_id}: {e}")
+        return False

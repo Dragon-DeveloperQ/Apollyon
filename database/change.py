@@ -86,16 +86,27 @@ async def set_task_completed_at(session, logger, task_id: int):
 
 # --------- Увеличение стрика задания ---------
 async def increment_task_streak(session, logger, task_id: int):
-    
     task = await read.get_task_by_id(session, logger, task_id)
     if task is None:
         logger.error(f"Задание с id={task_id} не найдено. Стрик не увеличен.")
         return None
-    
-    
-    
+
     task.streak += 1
     session.add(task)
     await session.flush()
     
     return task.streak
+
+
+# --------- Смена часового пояса пользователя ---------
+async def change_user_timezone(session, logger, user_id: int, new_timezone: str):
+    user = await read.get_user_by_telegram_id(session, logger, user_id)
+    if user is None:
+        logger.error(f"Пользователь с telegram_id={user_id} не найден. Часовой пояс не изменен.")
+        return None
+
+    user.timezone = new_timezone
+    session.add(user)
+    await session.flush()
+
+    return user.timezone

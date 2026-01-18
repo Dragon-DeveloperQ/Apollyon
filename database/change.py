@@ -122,3 +122,16 @@ async def change_user_timezone(session, logger, user_id: int, new_timezone: str)
     await session.flush()
 
     return user.timezone
+
+# --------- Увеличить количество выполнений задания ---------
+async def increment_task_completed_times(session, logger, task_id: int):
+    task = await read.get_task_by_id(session, logger, task_id)
+    if task is None:
+        logger.error(f"Задание с id={task_id} не найдено. Количество выполнений не увеличено.")
+        return None
+
+    task.completed_times += 1
+    session.add(task)
+    await session.flush()
+    
+    return task.completed_times

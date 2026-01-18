@@ -1,17 +1,17 @@
 import math
 
-def calculateTaskReward(dificultyAverage, dificult, streak):
-    return round(dificult + 0.2 * dificultyAverage * (1 + math.sqrt(dificultyAverage)*math.log1p(1 + streak)), 2)
+def calculateTaskReward(dificultyAverage, dificulty, streak):
+    return round(dificulty + 0.2 * dificultyAverage * (1 + math.sqrt(dificultyAverage)*math.log1p(1 + streak)), 2)
 
-def newAverageDifficulty(dificultyAverage: float, dificulty:float, streak:int):
+def newAverageDifficulty(dificultyAverage: float, dificulty:float, times:int):
     ''' 
     Работает при увеличении streak на 1 после выполнения задания
     Если streak = 0, возвращает None
     '''
     
-    if streak == 0:
+    if times == 0:
         return None
 
-    if streak > 10:
-        return round((dificultyAverage * 0.8 * 9 + dificulty) / 10 , 4)
-    return round((dificultyAverage * (streak - 1) + dificulty) / streak , 4)
+    if times > 10:
+        return round((dificultyAverage * 0.8 * 9 + dificulty) / 10 , 2)
+    return round((dificultyAverage * (times - 1) + dificulty) / times , 2)

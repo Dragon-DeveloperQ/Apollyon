@@ -62,5 +62,6 @@ class Task(Base):
     started_at  = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=False)
     completed_date = Column(Date(), nullable=True)
+    completed_times = Column(Integer, default=0)
 
     character = relationship("UserCharacter", back_populates="tasks")

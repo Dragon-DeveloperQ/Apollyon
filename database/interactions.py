@@ -139,7 +139,7 @@ async def deactivate_task(task_id: int):
                 # Установить последнее время выполнения задания
                 await change.set_task_completed_at(session, db_logger, task_id)
 
-                difficulty = float(await calculate_task_difficulty(session, task_id))
+                difficulty = round(await calculate_task_difficulty(session, task_id), 2)
                 if difficulty is None:
                     db_logger.error(f"Ошибка при расчете сложности задания id={task_id}. Невозможно деактивировать задание.")
                     return None
@@ -152,7 +152,9 @@ async def deactivate_task(task_id: int):
                     db_logger.error(f"Ошибка при расчете стрика задания id={task_id}. Невозможно деактивировать задание.")
                     return None
 
-                reward = await reward_task_completion(session, task_id, difficulty, streak)
+                times = await change.increment_task_completed_times(session, db_logger, task_id)
+
+                reward = await reward_task_completion(session, task_id, difficulty, times)
 
                 stats = {
                     "difficulty": difficulty,
@@ -229,7 +231,7 @@ async def calculate_task_difficulty(session, task_id: int):
     return difficulty
 
 # --------- Получение награды за задание ---------
-async def reward_task_completion(session, task_id: int, difficulty: float, streak: int):
+async def reward_task_completion(session, task_id: int, difficulty: float, times: int):
     '''
     Получение награды за выполнение задания.
     Требует task_id выполненного задания.
@@ -248,7 +250,7 @@ async def reward_task_completion(session, task_id: int, difficulty: float, strea
         return None
 
     # Обновление средней сложности задания
-    new_difficulty_avg = core.task.newAverageDifficulty(task.difficultyAVG, difficulty, streak)
+    new_difficulty_avg = core.task.newAverageDifficulty(task.difficultyAVG, difficulty, times)
     if new_difficulty_avg is None:
         db_logger.error(f"Ошибка при расчете новой средней сложности для задания id={task_id}. Награда не выдана.")
         raise Exception("Ошибка расчета новой средней сложности")
@@ -261,7 +263,7 @@ async def reward_task_completion(session, task_id: int, difficulty: float, strea
     task = await read.get_task_by_id(session, db_logger, task_id)
 
     # Рассчет нагрды
-    reward = core.task.calculateTaskReward(task.difficultyAVG, difficulty, streak)
+    reward = core.task.calculateTaskReward(task.difficultyAVG, dificulty=difficulty, streak=task.streak)
     if reward is None:
         db_logger.error(f"Ошибка при расчете награды для задания id={task_id}. Награда не выдана.")
         raise Exception("Ошибка расчета награды")

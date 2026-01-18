@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 
 load_dotenv("../config/core.env")
 TIME_TO_EARN_DIFFICULTY = int(getenv("TIME_TO_EARN_DIFFICULTY", "1800"))  # В секундах, по умолчанию 30 минут
+MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK = float(getenv("MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK", "1"))  # Минимальная сложность для деактивации задания
 
 # --------- Регистрация нового пользователя ---------
 async def register_new_user(telegram_id: int, username: str):
@@ -141,7 +142,7 @@ async def deactivate_task(task_id: int):
                 if difficulty is None:
                     db_logger.error(f"Ошибка при расчете сложности задания id={task_id}. Невозможно деактивировать задание.")
                     return None
-                if difficulty < 1:
+                if difficulty < MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK:
                     db_logger.info(f"Недостаточная сложность для деактивации задания id={task_id}. Требуется минимум 1, получено {difficulty}.")
                     return None
                 

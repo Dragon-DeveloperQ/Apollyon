@@ -31,7 +31,7 @@ class CompletedTask(StatesGroup):
 @router.message(F.text.in_(get_commands("show_tasks")))
 async def show_tasks_handler(message: Message, logger, language_code):
     logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
-    await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+    
     
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
     
@@ -39,6 +39,11 @@ async def show_tasks_handler(message: Message, logger, language_code):
     Сюда добавить обработку случая, когда заданий нет
     и вернуть ответ в стиле шаблона из языкового файла
     '''
+    if not tasks:
+        await message.answer(get_text_by_language("no_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        return
+    
+    await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
     for i in range(len(tasks)):
         text = f"{i+1}) " + get_text_by_language("tasks_handler", language_code).format(
                 taskname=tasks[i].title,

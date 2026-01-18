@@ -47,7 +47,7 @@ async def show_tasks_handler(message: Message, logger, language_code):
     for i in range(len(tasks)):
         text = f"{i+1}) " + get_text_by_language("tasks_handler", language_code).format(
                 taskname=tasks[i].title,
-                discription=tasks[i].description,
+                description=tasks[i].description,
                 difficulty=round(tasks[i].difficultyAVG,2),
                 streak=tasks[i].streak)
         if i == len(tasks) - 1:
@@ -133,7 +133,6 @@ async def process_description(message: Message, state: FSMContext, logger, langu
 
     await show_tasks_handler(message, logger, language_code)
 
-    # Сбрасываем состояние
     await state.clear()
 
 

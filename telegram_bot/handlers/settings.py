@@ -1,11 +1,13 @@
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.context import FSMContext
 from aiogram import Router, F, types
 from aiogram.types import Message
 from aiogram.filters import Command
 
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from telegram_bot.keyboards.main import get_settings_language_keyboard, get_settings_keyboard_by_language, get_settings_timezone_keyboard
+from telegram_bot.keyboards.main import get_settings_keyboard_by_telegram_id, get_settings_language_keyboard, get_settings_keyboard_by_language, get_settings_timezone_keyboard
 from telegram_bot.languages import get_commands, get_text_by_language
 from database.interactions import reset_user_character, save_user_timezone
 from core.timezone import find_time_zone
@@ -18,6 +20,9 @@ sys.path.insert(0, str(ROOT_DIR))
 from database.interactions import change_user_language
 
 router = Router()
+
+class TZStates(StatesGroup):
+    waiting_manual_tz = State()
 
 
 @router.message(F.text.in_(get_commands("settings")))
@@ -36,7 +41,7 @@ async def settings_command_handler(message: Message, logger, language_code):
 @router.message(F.text.in_(get_commands("timezone")))
 async def timezone_handler(message: Message, logger, language_code):
     logger.debug("Открытие настроек часового пояса для пользователя %s", message.from_user.id)
-    await message.answer("Пожалуйста, поделитесь своей локацией или выберите ввод вручную.", reply_markup=get_settings_timezone_keyboard(language_code))
+    await message.answer(get_text_by_language("share_location_or_manual", language_code), reply_markup=get_settings_timezone_keyboard(language_code))
 
 @router.message(F.content_type == "location")
 async def location_handler(message: Message, logger, language_code):
@@ -47,13 +52,27 @@ async def location_handler(message: Message, logger, language_code):
     tz_name = find_time_zone(lat, lon)
     if not tz_name:
         logger.warning("Не удалось определить часовой пояс по координатам пользователя %s", message.from_user.id)
-        await message.answer("Не удалось определить часовой пояс по координатам. Можете ввести вручную.")
+        await message.answer(get_text_by_language("failed_to_determine_timezone", language_code))
         return
     
     await save_user_timezone(message.from_user.id, tz_name)
-        
-    await message.answer(f"Определён часовой пояс: {tz_name}\nТекущее локальное время: {datetime.now(timezone.utc).astimezone(ZoneInfo(tz_name)).strftime('%Y-%m-%d %H:%M:%S %Z%z')}",
-                         reply_markup=types.ReplyKeyboardRemove())
+    
+    await message.answer(get_text_by_language("timezone_determined", language_code).format(
+        tz_name=tz_name,
+        local_time=datetime.now(timezone.utc).astimezone(ZoneInfo(tz_name)).time()
+    ), reply_markup=await get_settings_keyboard_by_language(language_code))
+
+@router.message(F.text.in_(get_commands("enter_timezone_manually")))
+async def ask_manual_tz(message: Message, state: FSMContext, logger, language_code):
+    await state.set_state(TZStates.waiting_manual_tz)
+    await message.answer(get_text_by_language("feature_in_development", language_code))
+    await state.clear()
+
+@router.message(TZStates.waiting_manual_tz)
+async def manual_tz_handler(message: Message, state: FSMContext, logger, language_code):
+    await message.answer(get_text_by_language("feature_in_development", language_code))
+    await state.clear()
+    state.clear()
 
 
 # -------- Выбор языка --------

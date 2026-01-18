@@ -94,10 +94,10 @@ async def get_settings_keyboard_by_telegram_id(telegram_id: int):
 async def get_settings_keyboard_by_language(language_code: str):
     settings_keyboard_list = [
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["notifications"])],
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["language"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["language"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["timezone"])],
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["back"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["reset_character"])]
     ]
-    settings_keyboard = ReplyKeyboardMarkup(keyboard=settings_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
+    settings_keyboard = ReplyKeyboardMarkup(keyboard=settings_keyboard_list, resize_keyboard=True)
     return settings_keyboard
 
 def get_settings_language_keyboard():
@@ -113,7 +113,8 @@ def get_settings_timezone_keyboard(language_code: str):
     settings_timezone_keyboard_list = [
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["send_location"], request_location=True)],
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["enter_timezone_manually"] )],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["settings"])]
     ]
     
-    settings_timezone_keyboard = ReplyKeyboardMarkup(keyboard=settings_timezone_keyboard_list, resize_keyboard=True, one_time_keyboard=True)
+    settings_timezone_keyboard = ReplyKeyboardMarkup(keyboard=settings_timezone_keyboard_list, resize_keyboard=True)
     return settings_timezone_keyboard

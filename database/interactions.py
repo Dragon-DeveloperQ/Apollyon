@@ -5,6 +5,7 @@ import database
 import logger as logger
 
 import core.task
+import core.timezone
 
 from . import change
 from . import create
@@ -137,8 +138,8 @@ async def deactivate_task(task_id: int):
                 await change.change_task_active_state(session, db_logger, task_id, is_active=False)
                 # Установить последнее время выполнения задания
                 await change.set_task_completed_at(session, db_logger, task_id)
-                
-                difficulty = await calculate_task_difficulty(session, task_id)
+
+                difficulty = float(await calculate_task_difficulty(session, task_id))
                 if difficulty is None:
                     db_logger.error(f"Ошибка при расчете сложности задания id={task_id}. Невозможно деактивировать задание.")
                     return None
@@ -146,16 +147,22 @@ async def deactivate_task(task_id: int):
                     db_logger.info(f"Недостаточная сложность для деактивации задания id={task_id}. Требуется минимум 1, получено {difficulty}.")
                     return None
                 
-                reward = await reward_task_completion(session, task_id, difficulty)
+                streak = await calculate_task_streak(session, task_id)
+                if streak is None:
+                    db_logger.error(f"Ошибка при расчете стрика задания id={task_id}. Невозможно деактивировать задание.")
+                    return None
+
+                reward = await reward_task_completion(session, task_id, difficulty, streak)
 
                 stats = {
                     "difficulty": difficulty,
+                    "streak": streak,
                     "reward": reward
                 }
                 return stats
     except Exception as e:
         db_logger.error(f"Ошибка при деактивации задания id={task_id}: {e}")
-        return { "difficulty": "ERROR", "reward": "ERROR" }
+        return { "difficulty": "ERROR", "streak": "ERROR", "reward": "ERROR" }
 async def hard_deactivate_task(task_id: int):
     try:
         async with database.db.async_session_maker() as session:
@@ -164,6 +171,34 @@ async def hard_deactivate_task(task_id: int):
                 await change.change_task_active_state(session, db_logger, task_id, is_active=False)
     except Exception as e:
         db_logger.error(f"Ошибка при намереной деактивации задания id={task_id}: {e}")
+
+# --------- Расчет strak задания ---------
+async def calculate_task_streak(session, task_id: int):
+    task = await read.get_task_by_id(session, db_logger, task_id)
+    if task is None:
+        db_logger.error(f"Задание с id={task_id} не найдено. Невозможно рассчитать стрик.")
+        return None
+
+    now = (datetime.now(core.timezone.tz_from_string(await read.get_user_timezone(session, db_logger, task.character_id)))).date()
+    completed_date = (await read.get_task_completed_date(session, db_logger, task_id))
+    if completed_date is None:
+        delta_days = 1
+    else:
+        delta_days = (now - completed_date).days
+        if delta_days is None or delta_days < 0:
+            db_logger.error(f"Ошибка при расчете разницы дат для задания id={task_id}. Невозможно рассчитать стрик.")
+            return None
+
+    if delta_days == 1:
+        await change.increment_task_streak(session, db_logger, task_id)
+        return task.streak + 1
+    elif delta_days > 1:
+        await change.reset_task_streak(session, db_logger, task_id)
+        db_logger.debug(f"Задание с id={task_id} не было выполнено вчера. Стрик сброшен.")
+        return 0
+    else:
+        db_logger.debug(f"Задание с id={task_id} уже было выполнено сегодня. Стрик не изменен.")
+        return task.streak
 
 # --------- Рассчет сложности задания ---------
 async def calculate_task_difficulty(session, task_id: int):
@@ -188,13 +223,13 @@ async def calculate_task_difficulty(session, task_id: int):
         db_logger.warning(f"Время выполнения задания id={task_id} равно нулю. Сложность установлена как 0.")
         return 0
 
-    # Делим на пол часа и округляем в большую сторону
-    difficulty = time_difference.total_seconds() / TIME_TO_EARN_DIFFICULTY
+    # Делим на пол часа
+    difficulty = round(time_difference.total_seconds() / TIME_TO_EARN_DIFFICULTY, 2)
 
     return difficulty
 
 # --------- Получение награды за задание ---------
-async def reward_task_completion(session, task_id: int, difficulty: int):
+async def reward_task_completion(session, task_id: int, difficulty: float, streak: int):
     '''
     Получение награды за выполнение задания.
     Требует task_id выполненного задания.
@@ -211,23 +246,6 @@ async def reward_task_completion(session, task_id: int, difficulty: int):
     if task is None:
         db_logger.error(f"Задание с id={task_id} не найдено. Награда не выдана.")
         return None
-
-
-    '''
-    -------------------------------------------------------------------------------------
-    Тут нужна проверка на время выполнения задания
-    Проверка, не опоздал ли пользователь, в таком случае сброс стрика
-    Проверка, не выполнялось ли задание уже сегодня, в таком случае не увеличиваем стрик
-    -------------------------------------------------------------------------------------
-    '''
-    # Увеличение streak при надобности
-    streak = await change.increment_task_streak(session, db_logger, task_id)
-    if streak is None:
-        db_logger.error(f"Не удалось увеличить стрик задания id={task_id}. Награда не выдана.")
-        raise Exception("Ошибка увеличения стрика")
-
-    # Повторно получаем задание с обновленным стриком
-    task = await read.get_task_by_id(session, db_logger, task_id)
 
     # Обновление средней сложности задания
     new_difficulty_avg = core.task.newAverageDifficulty(task.difficultyAVG, difficulty, streak)
@@ -395,7 +413,6 @@ async def get_user_language(telegram_id: int):
                     db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Невозможно получить язык.")
                     return None
 
-                db_logger.debug(f"Язык пользователя telegram_id={telegram_id} успешно получен: '{language}'.")
                 return language
 
     except Exception as e:

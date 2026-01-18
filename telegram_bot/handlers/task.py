@@ -241,7 +241,8 @@ async def process_task_completion(message: Message, state: FSMContext, logger, l
         await state.clear()
 
         await message.reply(get_text_by_language("task_completion", language_code).format(
-            difficulty=round(float(task_complation_stats["difficulty"]), 2), 
+            difficulty=round(float(task_complation_stats["difficulty"]), 2),
+            streak=task_complation_stats["streak"],
             reward=round(float(task_complation_stats["reward"]), 2)
         ))
 

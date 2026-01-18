@@ -68,3 +68,21 @@ async def get_task_started_at(session, logger, task_id: int):
     if task:
         return task.started_at
     return None
+
+# --------- Получить часовой пояс пользователя ---------
+async def get_user_timezone(session, logger, telegram_id: int):
+    result = await session.execute(
+        select(User.timezone).where(User.telegram_id == telegram_id)
+    )
+    timezone_str = result.scalar_one_or_none()
+    return timezone_str
+
+# --------- Получить дату последнего выполненния задания ---------
+async def get_task_completed_date(session, logger, task_id: int):
+    result = await session.execute(
+        select(Task).where(Task.id == task_id)
+    )
+    task = result.scalar_one_or_none()
+    if task:
+        return task.completed_date
+    return None

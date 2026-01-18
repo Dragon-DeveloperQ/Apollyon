@@ -84,7 +84,7 @@ async def set_task_completed_at(session, logger, task_id: int):
     return task.completed_at
 
 
-# --------- Увеличение стрика задания ---------
+# --------- Streak ---------
 async def increment_task_streak(session, logger, task_id: int):
     task = await read.get_task_by_id(session, logger, task_id)
     if task is None:
@@ -92,11 +92,23 @@ async def increment_task_streak(session, logger, task_id: int):
         return None
 
     task.streak += 1
+    task.completed_date = datetime.now(timezone.utc)
     session.add(task)
     await session.flush()
     
     return task.streak
+async def reset_task_streak(session, logger, task_id: int):
+    task = await read.get_task_by_id(session, logger, task_id)
+    if task is None:
+        logger.error(f"Задание с id={task_id} не найдено. Стрик не сброшен.")
+        return None
 
+    task.streak = 0
+    task.completed_date = datetime.now(timezone.utc)
+    session.add(task)
+    await session.flush()
+    
+    return task.streak
 
 # --------- Смена часового пояса пользователя ---------
 async def change_user_timezone(session, logger, user_id: int, new_timezone: str):

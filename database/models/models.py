@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, Integer, String, DateTime, ForeignKey, Boolean, Text
+from sqlalchemy import Column, Date, Float, Integer, String, DateTime, ForeignKey, Boolean, Text
 from sqlalchemy.orm import declarative_base, relationship
 
 
@@ -55,7 +55,7 @@ class Task(Base):
     character_id = Column(Integer, ForeignKey("user_characters.id"))
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    difficultyAVG = Column(Integer, default=1)
+    difficultyAVG = Column(Float, default=1)
     streak = Column(Integer, default=0)
 
     completed_at = Column(DateTime(timezone=True), nullable=True)

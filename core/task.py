@@ -3,7 +3,7 @@ import math
 def calculateTaskReward(dificultyAverage, dificult, streak):
     return round(dificult + 0.2 * dificultyAverage * (1 + math.sqrt(dificultyAverage)*math.log1p(1 + streak)), 2)
 
-def newAverageDifficulty(dificultyAverage, dificult, streak):
+def newAverageDifficulty(dificultyAverage: float, dificulty:float, streak:int):
     ''' 
     Работает при увеличении streak на 1 после выполнения задания
     Если streak = 0, возвращает None
@@ -13,5 +13,5 @@ def newAverageDifficulty(dificultyAverage, dificult, streak):
         return None
 
     if streak > 10:
-        return round((dificultyAverage * 0.8 * 9 + dificult) / 10 , 4)
-    return round((dificultyAverage * (streak - 1) + dificult) / streak , 4)
+        return round((dificultyAverage * 0.8 * 9 + dificulty) / 10 , 4)
+    return round((dificultyAverage * (streak - 1) + dificulty) / streak , 4)

@@ -18,6 +18,7 @@ menu_buttons = {
 "show_tasks" : "📋 Показать задания",
 
 "cancel_task_creation" : "❌ Отменить создание задания",
+"cancel_task_deletion" : "❌ Отменить удаление задания",
 "skip_description" : "➡️ Пропустить описание",
 "send_location" : "🗺 Отправить геолокацию",
 "enter_timezone_manually" : "⏰ Ввести часовой пояс вручную"
@@ -40,7 +41,13 @@ text = {
 "new_task_description_too_long" : "Слишком длинное описание (макс. 1000 символов). Пожалуйста, введите описание ещё раз:",
 "task_created_successfully" : "Задание успешно создано!",
 "enter_task_number" : "Введите номер задания: ",
+
 "cancel_task_execution" : "Завершение задания отменено.",
+"cancel_task_deletion" : "Удаление задания отменено.",
+
+"task_deleted" : "Задание успешно удалено.",
+
+"enter_valid_task_number" : "Пожалуйста, введите корректный номер задания.",
 "share_location_or_manual" : "Пожалуйста, поделитесь своей локацией или выберите ввод вручную.",
 "failed_to_determine_timezone" : "Не удалось определить часовой пояс по координатам. Можете ввести вручную.",
 "timezone_determined" : "Определён часовой пояс: {tz_name}\nТекущее локальное время: {local_time}",

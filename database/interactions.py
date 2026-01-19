@@ -194,7 +194,6 @@ async def check_task_streak(session, task_id: int):
     #db_logger.warning(f"Проверка стрика для задания id={task_id}: now={now}, completed_date={completed_date}, delta_days={delta_days}")
 
     return delta_days
-    
 
 # --------- Расчет strak задания ---------
 async def calculate_task_streak(session, task_id: int):
@@ -214,6 +213,37 @@ async def calculate_task_streak(session, task_id: int):
     else:
         db_logger.error(f"Ошибка при расчете стрика задания id={task_id}. Невозможно рассчитать стрик.")
         return None
+
+# --------- Обнуление стриков всех не просроченных заданий персонажа ---------
+async def reset_streaks_for_character_tasks(character_id: int):
+    '''
+    Обнуляет стрики всех заданий персонажа с заданным character_id, которые не были выполнены вчера.
+    '''
+
+    db_logger.info(f"Обнуление стриков для заданий character_id={character_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                result = await session.execute(
+                    read.select(Task).where(Task.character_id == character_id)
+                )
+                tasks = result.scalars().all()
+
+                for task in tasks:
+                    delta_days = await check_task_streak(session, task.id)
+                    if delta_days is None:
+                        db_logger.error(f"Ошибка при проверке стрика задания id={task.id}. Пропуск обнуления стрика.")
+                        continue
+                    if delta_days > 1:
+                        await change.reset_task_streak(session, db_logger, task.id)
+                        db_logger.debug(f"Стрик задания id={task.id} сброшен.")
+
+                db_logger.info(f"Обнуление стриков для заданий character_id={character_id} завершено.")
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при обнулении стриков для заданий character_id={character_id}: {e}")
 
 # --------- Рассчет сложности задания ---------
 async def calculate_task_difficulty(session, task_id: int):
@@ -289,7 +319,7 @@ async def reward_task_completion(session, task_id: int, difficulty: float, times
 
 
 # --------- Удаление задания ----------
-async def delete_task(session, task_id: int):
+async def delete_task(task_id: int):
     '''
     Удаляет задание с заданным task_id.
     '''

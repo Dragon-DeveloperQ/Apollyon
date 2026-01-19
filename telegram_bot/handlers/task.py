@@ -4,9 +4,9 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from telegram_bot.keyboards.main import get_task_keyboard, task_creation_keyboard1, task_creation_keyboard2, complete_task_keyboard1, complete_task_keyboard2
+from telegram_bot.keyboards.main import get_task_keyboard, task_creation_keyboard1, task_creation_keyboard2, complete_task_keyboard1, complete_task_keyboard2, get_task_delete_keyboard
 from telegram_bot.languages import get_commands, get_text_by_language
-from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id, activate_task, deactivate_task, hard_deactivate_task
+from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id, activate_task, deactivate_task, hard_deactivate_task, reset_streaks_for_character_tasks, delete_task
 
 from datetime import datetime, timezone
 
@@ -40,8 +40,8 @@ class CompletedTask(StatesGroup):
 async def show_tasks_handler(message: Message, logger, language_code):
     logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
     
-    
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+    await reset_streaks_for_character_tasks(tasks[0].character_id)
     
     if not tasks:
         await message.answer(get_text_by_language("no_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
@@ -49,11 +49,13 @@ async def show_tasks_handler(message: Message, logger, language_code):
     
     await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
     for i in range(len(tasks)):
+
         text = f"{i+1}) " + get_text_by_language("tasks_handler", language_code).format(
                 taskname=tasks[i].title,
                 description=tasks[i].description,
                 difficulty=round(tasks[i].difficultyAVG,2),
                 streak=tasks[i].streak)
+        
         if i == len(tasks) - 1:
             await message.answer(text, reply_markup= await get_task_keyboard(language_code))
         else:
@@ -185,7 +187,7 @@ async def process_task_selection(message: Message, state: FSMContext, logger, la
         return
 
     if not text.isdigit():
-        await message.answer("Пожалуйста, введите корректный номер задания.")
+        await message.answer(get_text_by_language("enter_valid_task_number", language_code))
         return
 
     task_number = int(text)
@@ -194,7 +196,7 @@ async def process_task_selection(message: Message, state: FSMContext, logger, la
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
 
     if task_number < 1 or task_number > len(tasks):
-        await message.answer("Пожалуйста, введите корректный номер задания.")
+        await message.answer(get_text_by_language("enter_valid_task_number", language_code))
         return
 
     selected_task = tasks[task_number - 1]
@@ -254,3 +256,65 @@ async def process_task_completion(message: Message, state: FSMContext, logger, l
 
         logger.debug("Задание %s завершено пользователем %s", task.title, message.from_user.id)
         return
+
+
+'''
+------------------------------------
+        Удаление задания
+------------------------------------
+'''
+
+@router.message(F.text.in_(get_commands("delete_task")))
+async def delete_task_handler(message: Message, state: FSMContext, logger, language_code):
+    logger.debug("Начато удаление задания пользователем %s", message.from_user.id)
+
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+    if not tasks:
+        await message.answer(get_text_by_language("no_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        return
+    elif len(tasks) == 1:
+        selected_task = tasks[0]
+        await message.answer(get_text_by_language("task_deleted", language_code).format(taskname=selected_task.title), reply_markup= await get_task_keyboard(language_code))
+        await hard_deactivate_task(selected_task.id)
+        logger.info("Задание %s удалено пользователем %s", selected_task.title, message.from_user.id)
+        await show_tasks_handler(message, logger, language_code)
+        return
+
+    await state.set_state(DeleteTask.waiting_for_task_selection)
+    await message.reply(get_text_by_language("enter_task_number", language_code), reply_markup= await get_task_delete_keyboard(language_code))
+
+@router.message(DeleteTask.waiting_for_task_selection)
+async def process_task_deletion(message: Message, state: FSMContext, logger, language_code):
+    logger.debug("Получен номер задания для удаления от пользователя %s: %s", message.from_user.id, message.text)
+
+    text = (message.text or "").strip()
+
+    if text in get_commands("cancel_task_deletion"):
+        await state.clear()
+        await message.reply(get_text_by_language("cancel_task_deletion", language_code))
+        await show_tasks_handler(message, logger, language_code)
+        return
+
+    if not text.isdigit():
+        await message.answer(get_text_by_language("enter_valid_task_number", language_code))
+        return
+
+    task_number = int(text)
+    await state.update_data(task_number=task_number)
+
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+
+    if task_number < 1 or task_number > len(tasks):
+        await message.answer(get_text_by_language("enter_valid_task_number", language_code))
+        return
+
+    selected_task = tasks[task_number - 1]
+    await delete_task(selected_task.id)
+
+    logger.info("Задание %s удалено пользователем %s", selected_task.title, message.from_user.id)
+
+    await message.answer(get_text_by_language("task_deleted", language_code).format(taskname=selected_task.title), reply_markup= await get_task_keyboard(language_code))
+
+    await show_tasks_handler(message, logger, language_code)
+
+    await state.clear()

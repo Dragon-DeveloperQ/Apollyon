@@ -22,6 +22,14 @@ class NewTask(StatesGroup):
     waiting_for_name = State()
     waiting_for_description = State()
 
+class ChangeTask(StatesGroup):
+    waiting_for_task_selection = State()
+    waiting_for_new_name = State()
+    waiting_for_new_description = State()
+
+class DeleteTask(StatesGroup):
+    waiting_for_task_selection = State()
+
 class CompletedTask(StatesGroup):
     waiting_for_task_selection = State()
     waiting_for_task_completion = State()
@@ -35,10 +43,6 @@ async def show_tasks_handler(message: Message, logger, language_code):
     
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
     
-    '''
-    Сюда добавить обработку случая, когда заданий нет
-    и вернуть ответ в стиле шаблона из языкового файла
-    '''
     if not tasks:
         await message.answer(get_text_by_language("no_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
         return

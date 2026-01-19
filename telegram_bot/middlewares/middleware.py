@@ -15,10 +15,11 @@ class Middleware(BaseMiddleware):
         
         # Проверка пользователя на регестрацию
         user = data.get("event_from_user")
+       
         if user is None:
             loggerMiddleware.debug("Не удалось получить пользователя из события для регестрации.")
             return await handler(event, data)
-
+        
         if await get_user_language(user.id) is None:
             loggerMiddleware.debug("Регестрация пользователя %s", user.id)
             await register_new_user(user.id, user.full_name)

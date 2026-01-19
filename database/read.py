@@ -86,3 +86,13 @@ async def get_task_completed_date(session, logger, task_id: int):
     if task:
         return task.completed_date
     return None
+
+# --------- Получить стрик задания ---------
+async def get_task_streak(session, logger, task_id: int):
+    result = await session.execute(
+        select(Task).where(Task.id == task_id)
+    )
+    task = result.scalar_one_or_none()
+    if task:
+        return task.streak
+    return None

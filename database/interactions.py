@@ -174,11 +174,11 @@ async def hard_deactivate_task(task_id: int):
     except Exception as e:
         db_logger.error(f"Ошибка при намереной деактивации задания id={task_id}: {e}")
 
-# --------- Расчет strak задания ---------
-async def calculate_task_streak(session, task_id: int):
+# --------- Проверка стрика задания ---------
+async def check_task_streak(session, task_id: int):
     task = await read.get_task_by_id(session, db_logger, task_id)
     if task is None:
-        db_logger.error(f"Задание с id={task_id} не найдено. Невозможно рассчитать стрик.")
+        db_logger.error(f"Задание с id={task_id} не найдено. Невозможно проверить стрик.")
         return None
 
     now = (datetime.now(core.timezone.tz_from_string(await read.get_user_timezone(session, db_logger, task.character_id)))).date()
@@ -188,19 +188,32 @@ async def calculate_task_streak(session, task_id: int):
     else:
         delta_days = (now - completed_date).days
         if delta_days is None or delta_days < 0:
-            db_logger.error(f"Ошибка при расчете разницы дат для задания id={task_id}. Невозможно рассчитать стрик.")
+            db_logger.error(f"Ошибка при расчете разницы дат для задания id={task_id}. Невозможно проверить стрик.")
             return None
 
+    #db_logger.warning(f"Проверка стрика для задания id={task_id}: now={now}, completed_date={completed_date}, delta_days={delta_days}")
+
+    return delta_days
+    
+
+# --------- Расчет strak задания ---------
+async def calculate_task_streak(session, task_id: int):
+    delta_days = await check_task_streak(session, task_id)
+    #db_logger.debug(f"Расчет стрика для задания id={task_id}: take={take}")
     if delta_days == 1:
         await change.increment_task_streak(session, db_logger, task_id)
-        return task.streak + 1
+        db_logger.debug(f"Задание с id={task_id} было выполнено. Стрик увеличен.")
+        return await read.get_task_streak(session, db_logger, task_id) + 1
     elif delta_days > 1:
         await change.reset_task_streak(session, db_logger, task_id)
         db_logger.debug(f"Задание с id={task_id} не было выполнено вчера. Стрик сброшен.")
         return 0
-    else:
+    elif delta_days == 0:
         db_logger.debug(f"Задание с id={task_id} уже было выполнено сегодня. Стрик не изменен.")
-        return task.streak
+        return await read.get_task_streak(session, db_logger, task_id)
+    else:
+        db_logger.error(f"Ошибка при расчете стрика задания id={task_id}. Невозможно рассчитать стрик.")
+        return None
 
 # --------- Рассчет сложности задания ---------
 async def calculate_task_difficulty(session, task_id: int):
@@ -404,7 +417,7 @@ async def get_user_language(telegram_id: int):
     Возвращает код языка или None в случае ошибки.
     '''
 
-    db_logger.debug(f"Получение языка пользователя telegram_id={telegram_id}...")
+    #db_logger.debug(f"Получение языка пользователя telegram_id={telegram_id}...")
 
     try:
         async with database.db.async_session_maker() as session:

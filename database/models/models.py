@@ -1,6 +1,11 @@
 from sqlalchemy import Column, Date, Float, Integer, String, DateTime, ForeignKey, Boolean, Text
 from sqlalchemy.orm import declarative_base, relationship
 
+from os import getenv
+from dotenv import load_dotenv
+
+load_dotenv("../config/core.env")
+MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK = float(getenv("MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK", "0.1")) 
 
 # Базовый класс для всех моделей
 Base = declarative_base()
@@ -55,7 +60,7 @@ class Task(Base):
     character_id = Column(Integer, ForeignKey("user_characters.id"))
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    difficultyAVG = Column(Float, default=1)
+    difficultyAVG = Column(Float, default=MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK)
     streak = Column(Integer, default=0)
 
     completed_at = Column(DateTime(timezone=True), nullable=True)

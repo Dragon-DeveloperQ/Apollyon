@@ -42,11 +42,12 @@ async def show_tasks_handler(message: Message, logger, language_code):
     logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
     
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
-    await reset_streaks_for_character_tasks(tasks[0].character_id)
     
     if not tasks:
         await message.answer(get_text_by_language("no_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
         return
+    
+    await reset_streaks_for_character_tasks(tasks[0].character_id)
     
     await message.answer(get_text_by_language("your_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
     for i in range(len(tasks)):
@@ -424,7 +425,7 @@ async def delete_task_handler(message: Message, state: FSMContext, logger, langu
     elif len(tasks) == 1:
         selected_task = tasks[0]
         await message.answer(get_text_by_language("task_deleted", language_code).format(taskname=selected_task.title), reply_markup= await get_task_keyboard(language_code))
-        await hard_deactivate_task(selected_task.id)
+        await delete_task(selected_task.id)
         logger.info("Задание %s удалено пользователем %s", selected_task.title, message.from_user.id)
         await show_tasks_handler(message, logger, language_code)
         return

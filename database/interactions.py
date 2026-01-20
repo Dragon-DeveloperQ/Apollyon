@@ -151,8 +151,6 @@ async def deactivate_task(task_id: int):
                 if streak is None:
                     db_logger.error(f"Ошибка при расчете стрика задания id={task_id}. Невозможно деактивировать задание.")
                     return None
-
-                
                 
                 times = await change.increment_task_completed_times(session, db_logger, task_id)
 

@@ -328,7 +328,6 @@ async def reward_task_completion(session, task_id: int, difficulty: float, times
 
     return reward
 
-
 # --------- Удаление задания ----------
 async def delete_task(task_id: int):
     '''
@@ -355,6 +354,56 @@ async def delete_task(task_id: int):
 
     except Exception as e:
         db_logger.error(f"Ошибка при удалении задания id={task_id}: {e}")
+        return False
+
+# --------- Изменение задания ---------
+async def change_task_name(task_id: int, new_name: str):
+    '''
+    Изменяет название задания с заданным task_id на new_name.
+    '''
+
+    db_logger.info(f"Смена названия задания id={task_id} на '{new_name}'...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                task = await read.get_task_by_id(session, db_logger, task_id)
+                if task is None:
+                    db_logger.error(f"Задание с id={task_id} не найдено. Смена названия не выполнена.")
+                    return False
+
+                await change.change_task_name(session, db_logger, task_id, new_name)
+
+                db_logger.info(f"Название задания id={task_id} успешно изменено на '{new_name}'.")
+                return True
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при смене названия задания id={task_id}: {e}")
+        return False
+async def change_task_description(task_id: int, new_description: str):
+    '''
+    Изменяет описание задания с заданным task_id на new_description.
+    '''
+
+    db_logger.info(f"Смена описания задания id={task_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                task = await read.get_task_by_id(session, db_logger, task_id)
+                if task is None:
+                    db_logger.error(f"Задание с id={task_id} не найдено. Смена описания не выполнена.")
+                    return False
+
+                await change.change_task_description(session, db_logger, task_id, new_description)
+
+                db_logger.info(f"Описание задания id={task_id} успешно изменено.")
+                return True
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при смене описания задания id={task_id}: {e}")
         return False
 
 
@@ -420,7 +469,52 @@ async def get_all_tasks_for_character_by_telegram_id(telegram_id: int):
     except Exception as e:
         db_logger.error(f"Ошибка при получении заданий для пользователя telegram_id={telegram_id}: {e}")
         return None
+async def get_task_by_id(task_id: int):
+    '''
+    Получает задание с заданным task_id.
+    Возвращает задание или None в случае ошибки.
+    '''
 
+    db_logger.debug(f"Получение задания id={task_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                task = await read.get_task_by_id(session, db_logger, task_id)
+                if task is None:
+                    db_logger.error(f"Задание с id={task_id} не найдено.")
+                    return None
+
+                db_logger.info(f"Задание id={task_id} успешно получено.")
+                return task
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при получении задания id={task_id}: {e}")
+        return None
+async def get_task_by_telegram_id(task_id: int):
+    '''
+    Получает задание с заданным task_id.
+    Возвращает задание или None в случае ошибки.
+    '''
+
+    db_logger.debug(f"Получение задания id={task_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                task = await read.get_task_by_id(session, db_logger, task_id)
+                if task is None:
+                    db_logger.error(f"Задание с id={task_id} не найдено.")
+                    return None
+
+                db_logger.info(f"Задание id={task_id} успешно получено.")
+                return task
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при получении задания id={task_id}: {e}")
+        return None
 
 # --------- Смена языка пользователя ---------
 async def change_user_language(telegram_id: int, new_language: str):

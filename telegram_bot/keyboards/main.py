@@ -50,6 +50,30 @@ async def task_creation_keyboard2(language_code: str):
     task_creation_keyboard = ReplyKeyboardMarkup(keyboard=task_creation_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
     return task_creation_keyboard
 
+async def task_change_keyboard(language_code: str):
+    task_change_keyboard_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["change_task_name"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["change_task_description"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["cancel_task_change"])]
+    ]
+    task_change_keyboard = ReplyKeyboardMarkup(keyboard=task_change_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
+    return task_change_keyboard
+
+async def task_change_cancel_keyboard(language_code: str):
+    task_change_cancel_keyboard_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["cancel_task_change"])]
+    ]
+    task_change_cancel_keyboard = ReplyKeyboardMarkup(keyboard=task_change_cancel_keyboard_list, resize_keyboard=True, one_time_keyboard=False)
+    return task_change_cancel_keyboard
+
+async def task_change_cancel_keyboard_for_description(language_code: str):
+    task_change_cancel_keyboard_for_description_list = [
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["delete_description"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["cancel_task_change"])]
+    ]
+    task_change_cancel_keyboard_for_description = ReplyKeyboardMarkup(keyboard=task_change_cancel_keyboard_for_description_list, resize_keyboard=True, one_time_keyboard=False)
+    return task_change_cancel_keyboard_for_description
+
 async def complete_task_keyboard1(language_code: str):
     complete_task_keyboard_list = [
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["cancel_task_execution"])]

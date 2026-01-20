@@ -6,6 +6,8 @@ menu_buttons = {
 "back" : "⬅️ Back",
 "new_task" : "📝 New Task",
 "change_task" : "🪄 Change Task",
+"change_task_name" : "✏️ Изменить название",
+"change_task_description" : "🖊 Изменить описание",
 "delete_task" : "🗑 Delete Task",
 "notifications" : "🔔 Notifications",
 "language" : "🇷🇺🇺🇦🇺🇸 Language",
@@ -18,9 +20,11 @@ menu_buttons = {
 "show_tasks" : "📋 Show Tasks",
 
 "cancel_task_creation" : "❌ Cancel Task Creation",
+"cancel_task_change" : "❌ Отменить изменение задания",
 "cancel_task_deletion" : "❌ Cancel Task Deletion",
 
 "skip_description" : "➡️ Skip Description",
+"delete_description" : "🗑 Remove Description",
 "send_location" : "🗺 Send Location",
 "enter_timezone_manually" : "⏰ Enter Timezone Manually"
 }

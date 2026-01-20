@@ -6,6 +6,8 @@ menu_buttons = {
 "back" : "⬅️ Назад",
 "new_task" : "📝 Новое задание",
 "change_task" : "🪄 Изменить задание",
+"change_task_name" : "✏️ Изменить название",
+"change_task_description" : "🖊 Изменить описание",
 "delete_task" : "🗑 Удалить задание",
 "notifications" : "🔔 Уведомления",
 "language" : "🇷🇺🇺🇦🇺🇸 Язык",
@@ -18,8 +20,11 @@ menu_buttons = {
 "show_tasks" : "📋 Показать задания",
 
 "cancel_task_creation" : "❌ Отменить создание задания",
+"cancel_task_change" : "❌ Выйти из изменения задания",
 "cancel_task_deletion" : "❌ Отменить удаление задания",
+
 "skip_description" : "➡️ Пропустить описание",
+"delete_description" : "🗑 Убрать описание",
 "send_location" : "🗺 Отправить геолокацию",
 "enter_timezone_manually" : "⏰ Ввести часовой пояс вручную"
 }
@@ -35,17 +40,23 @@ text = {
 "choose_language" : "Выберите язык:",
 "your_tasks" : "Ваши задания:",
 "new_task_prompt" : "Введите название задания:",
+"enter_new_task_name" : "Введите новое название задания:",
 "new_task_description_prompt" : "Введите описание задания:",
+"enter_new_task_description" : "Введите новое описание задания:",
 "new_task_name_empty" : "Название не может быть пустым. Пожалуйста, введите название ещё раз:", 
 "new_task_name_too_long" : "Слишком длинное название (макс. 100 символов). Пожалуйста, введите название ещё раз:",
 "new_task_description_too_long" : "Слишком длинное описание (макс. 1000 символов). Пожалуйста, введите описание ещё раз:",
 "task_created_successfully" : "Задание успешно создано!",
 "enter_task_number" : "Введите номер задания: ",
+"what_to_change_in_task" : "Что нужно изменить в задании?",
 
 "cancel_task_execution" : "Завершение задания отменено.",
+"cancel_task_change" : "Выйти из изменения задания.",
 "cancel_task_deletion" : "Удаление задания отменено.",
 
-"task_deleted" : "Задание успешно удалено.",
+"task_deleted" : "Задание удалено.",
+"task_name_changed" : "Название задания изменено.",
+"task_description_changed" : "Описание задания изменено.",
 
 "enter_valid_task_number" : "Пожалуйста, введите корректный номер задания.",
 "share_location_or_manual" : "Пожалуйста, поделитесь своей локацией или выберите ввод вручную.",

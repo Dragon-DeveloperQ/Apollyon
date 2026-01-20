@@ -149,3 +149,29 @@ async def update_task_completed_date(session, logger, task_id: int, new_date: da
     await session.flush()
     
     return task.completed_date
+
+# --------- Смена названия задания ---------
+async def change_task_name(session, logger, task_id: int, new_name: str):
+    task = await read.get_task_by_id(session, logger, task_id)
+    if task is None:
+        logger.error(f"Задание с id={task_id} не найдено. Название не изменено.")
+        return None
+
+    task.title = new_name
+    session.add(task)
+    await session.flush()
+    
+    return task.title
+
+# --------- Смена описания задания ---------
+async def change_task_description(session, logger, task_id: int, new_description: str):
+    task = await read.get_task_by_id(session, logger, task_id)
+    if task is None:
+        logger.error(f"Задание с id={task_id} не найдено. Описание не изменено.")
+        return None
+
+    task.description = new_description
+    session.add(task)
+    await session.flush()
+    
+    return task.description

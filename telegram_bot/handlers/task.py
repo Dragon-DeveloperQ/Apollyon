@@ -1,12 +1,12 @@
-from aiogram import Router, F
+from aiogram import Router, F, types
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from telegram_bot.keyboards.main import get_task_keyboard, task_creation_keyboard1, task_creation_keyboard2, complete_task_keyboard1, complete_task_keyboard2, get_task_delete_keyboard
+from telegram_bot.keyboards.main import get_task_keyboard, task_change_cancel_keyboard, task_change_cancel_keyboard_for_description, task_change_keyboard, task_creation_keyboard1, task_creation_keyboard2, complete_task_keyboard1, complete_task_keyboard2, get_task_delete_keyboard
 from telegram_bot.languages import get_commands, get_text_by_language
-from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id, activate_task, deactivate_task, hard_deactivate_task, reset_streaks_for_character_tasks, delete_task
+from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id, activate_task, deactivate_task, hard_deactivate_task, reset_streaks_for_character_tasks, delete_task, change_task_name, change_task_description, get_task_by_telegram_id, get_task_by_id
 
 from datetime import datetime, timezone
 
@@ -24,6 +24,7 @@ class NewTask(StatesGroup):
 
 class ChangeTask(StatesGroup):
     waiting_for_task_selection = State()
+    waiting_for_task_selection_attribute = State()
     waiting_for_new_name = State()
     waiting_for_new_description = State()
 
@@ -60,7 +61,13 @@ async def show_tasks_handler(message: Message, logger, language_code):
             await message.answer(text, reply_markup= await get_task_keyboard(language_code))
         else:
             await message.answer(text)
-
+async def show_task(message: Message, task, language_code):
+    text = get_text_by_language("tasks_handler", language_code).format(
+                taskname=task.title,
+                description=task.description,
+                difficulty=round(task.difficultyAVG,2),
+                streak=task.streak)
+    await message.answer(text)
 
 '''
 ------------------------------------
@@ -175,7 +182,7 @@ async def complete_task_handler(message: Message, state: FSMContext, logger, lan
     await message.reply(get_text_by_language("enter_task_number", language_code), reply_markup= await complete_task_keyboard1(language_code))
 
 @router.message(CompletedTask.waiting_for_task_selection)
-async def process_task_selection(message: Message, state: FSMContext, logger, language_code):
+async def process_task_selection_for_completion(message: Message, state: FSMContext, logger, language_code):
     logger.debug("Получен номер задания от пользователя %s: %s", message.from_user.id, message.text)
 
     text = (message.text or "").strip()
@@ -275,6 +282,130 @@ async def change_task_handler(message: Message, state: FSMContext, logger, langu
     await state.set_state(ChangeTask.waiting_for_task_selection)
     await message.reply(get_text_by_language("enter_task_number", language_code), reply_markup= await get_task_delete_keyboard(language_code))
 
+@router.message(ChangeTask.waiting_for_task_selection)
+async def process_task_selection_for_change(message: Message, state: FSMContext, logger, language_code):
+    text = (message.text or "").strip()
+
+    if text in get_commands("cancel_task_change"):
+        await state.clear()
+        await message.reply(get_text_by_language("cancel_task_change", language_code))
+        await show_tasks_handler(message, logger, language_code)
+        return
+
+    logger.debug("Получен номер задания для изменения от пользователя %s: %s", message.from_user.id, message.text)
+
+    if text in get_commands("cancel_task_change"):
+        await state.clear()
+        await message.reply(get_text_by_language("cancel_task_change", language_code))
+        await show_tasks_handler(message, logger, language_code)
+        return
+
+    if not text.isdigit():
+        await message.answer(get_text_by_language("enter_valid_task_number", language_code))
+        return
+    
+    task_number = int(text)
+
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+
+    if task_number < 1 or task_number > len(tasks):
+        await message.answer(get_text_by_language("enter_valid_task_number", language_code))
+        return
+    
+    await state.update_data(task_id=tasks[task_number - 1].id)
+
+    await state.set_state(ChangeTask.waiting_for_task_selection_attribute)
+    await message.reply(get_text_by_language("what_to_change_in_task", language_code), reply_markup= await task_change_keyboard(language_code) )
+
+@router.message(ChangeTask.waiting_for_task_selection_attribute)
+async def process_task_attribute_selection(message: Message, state: FSMContext, logger, language_code):
+    
+    if(message.text in get_commands("cancel_task_change")):
+        await state.clear()
+        await message.reply(get_text_by_language("cancel_task_change", language_code))
+        await show_tasks_handler(message, logger, language_code)
+        return
+    
+    elif(message.text in get_commands("change_task_name")):
+        await state.set_state(ChangeTask.waiting_for_new_name)
+        await message.reply(get_text_by_language("enter_new_task_name", language_code), reply_markup=await task_change_cancel_keyboard(language_code))
+    
+    elif(message.text in get_commands("change_task_description")):
+        await state.set_state(ChangeTask.waiting_for_new_description)
+        await message.reply(get_text_by_language("enter_new_task_description", language_code), reply_markup=await task_change_cancel_keyboard_for_description(language_code))
+
+@router.message(ChangeTask.waiting_for_new_name)
+async def process_new_task_name(message: Message, state: FSMContext, logger, language_code):
+    text = (message.text or "").strip()
+
+    logger.debug("Получено новое имя задания от пользователя %s: %s", message.from_user.id, message.text)
+
+    if text in get_commands("cancel_task_change"):
+        await state.clear()
+        await message.reply(get_text_by_language("cancel_task_change", language_code))
+        await show_tasks_handler(message, logger, language_code)
+        return
+    
+    if not text:
+        await message.answer(get_text_by_language("new_task_name_empty", language_code))
+        return
+
+    # Проверка длины названия
+    if len(text) > 100:
+        await message.answer(get_text_by_language("new_task_name_too_long", language_code))
+        return
+
+    data = await state.get_data()
+    task_id = data.get("task_id")
+
+    task = await get_task_by_id(task_id)
+
+    await change_task_name(task.id, text)
+
+    logger.info("Задание %s изменено пользователем %s. Новое название: %s", task.title, message.from_user.id, text)
+
+    await message.answer(get_text_by_language("task_name_changed", language_code).format(taskname=text), reply_markup= await task_change_keyboard(language_code))
+
+    await state.set_state(ChangeTask.waiting_for_task_selection_attribute)
+
+    task = await get_task_by_id(task_id)
+    await show_task(message, task, language_code)
+
+@router.message(ChangeTask.waiting_for_new_description)
+async def process_new_task_description(message: Message, state: FSMContext, logger, language_code):
+    text = (message.text or "").strip()
+
+    if text in get_commands("cancel_task_change"):
+        await state.clear()
+        await message.reply(get_text_by_language("cancel_task_change", language_code))
+        await show_tasks_handler(message, logger, language_code)
+        return
+    
+    if text in get_commands("delete_description"):
+        text = ""
+
+    logger.debug("Получено новое описание задания от пользователя %s: %s", message.from_user.id, message.text)
+
+    # Проверка длины описания
+    if len(text) > 1000:
+        await message.answer(get_text_by_language("new_task_description_too_long", language_code))
+        return
+
+    data = await state.get_data()
+    task_id = data.get("task_id")
+
+    task = await get_task_by_id(task_id)
+
+    await change_task_description(task.id, text)
+
+    logger.info("Задание %s изменено пользователем %s. Новое описание: %s", task.title, message.from_user.id, text)
+
+    await message.answer(get_text_by_language("task_description_changed", language_code).format(taskname=task.title), reply_markup= await task_change_keyboard(language_code))
+
+    await state.set_state(ChangeTask.waiting_for_task_selection_attribute)
+
+    task = await get_task_by_id(task_id)
+    await show_task(message, task, language_code)
 
 '''
 ------------------------------------

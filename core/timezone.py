@@ -23,10 +23,10 @@ def tz_from_string(string: str) -> timezone:
     Поддерживает:
       - IANA имена, например "Europe/Chisinau"
       - смещения вида "+03:00" или "-04:30"
-    При ошибке возвращает timezone.utc (fallback).
+    При ошибке возвращает None (fallback).
     """
     if not string:
-        return timezone.utc
+        return None
 
     s = string.strip()
     # Относительное время
@@ -37,13 +37,13 @@ def tz_from_string(string: str) -> timezone:
             mm = int(s[4:6])
             return timezone(timedelta(hours=sign*hh, minutes=sign*mm))
         except Exception:
-            return timezone.utc
+            return None
 
     # Временные области IANA
     try:
         return ZoneInfo(s)
     except ZoneInfoNotFoundError:
         # fallback
-        return timezone.utc
+        return None
     except Exception:
-        return timezone.utc
+        return None

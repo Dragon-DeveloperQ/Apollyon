@@ -96,3 +96,11 @@ async def get_task_streak(session, logger, task_id: int):
     if task:
         return task.streak
     return None
+
+# --------- Получить пользователя по заданию ---------
+async def get_user_by_task_id(session, logger, task_id: int):
+    result = await session.execute(
+        select(User).join(UserCharacter).join(Task).where(Task.id == task_id)
+    )
+    user = result.scalar_one_or_none()
+    return user

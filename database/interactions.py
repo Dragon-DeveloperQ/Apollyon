@@ -152,6 +152,8 @@ async def deactivate_task(task_id: int):
                     db_logger.error(f"Ошибка при расчете стрика задания id={task_id}. Невозможно деактивировать задание.")
                     return None
 
+                
+                
                 times = await change.increment_task_completed_times(session, db_logger, task_id)
 
                 reward = await reward_task_completion(session, task_id, difficulty, times)
@@ -183,6 +185,7 @@ async def check_task_streak(session, task_id: int):
 
     now = (datetime.now(core.timezone.tz_from_string(await read.get_user_timezone(session, db_logger, task.character_id)))).date()
     completed_date = (await read.get_task_completed_date(session, db_logger, task_id))
+    db_logger.debug(f"Проверка стрика для задания id={task_id}: now={now}, completed_date={completed_date}")
     if completed_date is None:
         delta_days = 1
     else:
@@ -191,7 +194,8 @@ async def check_task_streak(session, task_id: int):
             db_logger.error(f"Ошибка при расчете разницы дат для задания id={task_id}. Невозможно проверить стрик.")
             return None
 
-    #db_logger.warning(f"Проверка стрика для задания id={task_id}: now={now}, completed_date={completed_date}, delta_days={delta_days}")
+    # db_logger.warning((datetime.now(core.timezone.tz_from_string(await read.get_user_timezone(session, db_logger, task.character_id)))))
+    # db_logger.warning(f"Проверка стрика для задания id={task_id}: now={now}, completed_date={completed_date}, delta_days={delta_days}")
 
     return delta_days
 
@@ -203,13 +207,16 @@ async def calculate_task_streak(session, task_id: int):
         await change.increment_task_streak(session, db_logger, task_id)
         db_logger.debug(f"Задание с id={task_id} было выполнено. Стрик увеличен.")
         return await read.get_task_streak(session, db_logger, task_id) + 1
+    
     elif delta_days > 1:
         await change.reset_task_streak(session, db_logger, task_id)
         db_logger.debug(f"Задание с id={task_id} не было выполнено вчера. Стрик сброшен.")
         return 0
+    
     elif delta_days == 0:
         db_logger.debug(f"Задание с id={task_id} уже было выполнено сегодня. Стрик не изменен.")
         return await read.get_task_streak(session, db_logger, task_id)
+    
     else:
         db_logger.error(f"Ошибка при расчете стрика задания id={task_id}. Невозможно рассчитать стрик.")
         return None
@@ -314,7 +321,11 @@ async def reward_task_completion(session, task_id: int, difficulty: float, times
     # Выдача награды персонажу
     await change.update_task_reward(session, db_logger, task.character_id, reward)
     db_logger.debug(f"Награда за выполнение задания id={task_id} успешно выдана: reward={reward}")
-                
+    
+    # Установить дату последнего выполненния задания
+    last_date = datetime.now(core.timezone.tz_from_string(await read.get_user_timezone(session, db_logger, (await read.get_user_by_task_id(session, db_logger, task_id)).telegram_id))).date()
+    await change.update_task_completed_date(session, db_logger, task_id, last_date)
+
     return reward
 
 

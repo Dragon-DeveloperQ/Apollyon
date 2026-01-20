@@ -260,6 +260,24 @@ async def process_task_completion(message: Message, state: FSMContext, logger, l
 
 '''
 ------------------------------------
+        Изменение задания
+------------------------------------
+'''
+@router.message(F.text.in_(get_commands("change_task")))
+async def change_task_handler(message: Message, state: FSMContext, logger, language_code):
+    logger.debug("Начато изменение задания пользователем %s", message.from_user.id)
+
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+    if not tasks:
+        await message.answer(get_text_by_language("no_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
+        return
+
+    await state.set_state(ChangeTask.waiting_for_task_selection)
+    await message.reply(get_text_by_language("enter_task_number", language_code), reply_markup= await get_task_delete_keyboard(language_code))
+
+
+'''
+------------------------------------
         Удаление задания
 ------------------------------------
 '''

@@ -36,6 +36,7 @@ class UserCharacter(Base):
     exp = Column(Integer, default=0)
     gold = Column(Integer, default=0)
 
+    stat_points = Column(Integer, default=0)
     
     '''Основные характеристики персонажа. 
     Каждая характеристика имеет формулу расчета показателя, 

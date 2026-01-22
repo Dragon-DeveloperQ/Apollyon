@@ -122,6 +122,17 @@ async def increment_character_level(session, logger, character_id: int):
     await session.flush()
     
     return character.level
+async def increment_character_stat_points(session, logger, character_id: int, points: int = 1):
+    character = await read.get_character_by_id(session, logger, character_id)
+    if character is None:
+        logger.error(f"Персонаж с id={character_id} не найден. Очки уровня не увеличены.")
+        return None
+
+    character.stat_points += points
+    session.add(character)
+    await session.flush()
+    
+    return character.stat_points
 async def change_character_exp(session, logger, character_id: int, new_exp: int):
     character = await read.get_character_by_id(session, logger, character_id)
     if character is None:

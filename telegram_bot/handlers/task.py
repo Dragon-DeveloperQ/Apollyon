@@ -39,7 +39,7 @@ class CompletedTask(StatesGroup):
 @router.message(F.text.in_(get_commands("tasks")))
 @router.message(F.text.in_(get_commands("show_tasks")))
 async def show_tasks_handler(message: Message, logger, language_code):
-    logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
+    #logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
     
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
     

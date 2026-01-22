@@ -234,6 +234,7 @@ async def level_up_character(session, telegram_id: int, levels: int = 1):
             exp_to_level_up = core.task.calculateExpToLevelUp(character.level + 1 + new_levels)
             await change.change_character_exp(session, db_logger, character.id, character.exp - exp_to_level_up)
             await change.increment_character_level(session, db_logger, character.id)
+            await change.increment_character_stat_points(session, db_logger, character.id)
             new_levels += 1
         
         db_logger.info(f"Персонаж пользователя telegram_id={telegram_id} повышен на {new_levels} уровней.")
@@ -661,7 +662,17 @@ async def get_character_stats(telegram_id: int):
                     "username": user.username,
                     "level": character.level,
                     "exp": character.exp,
-                    "gold": character.gold
+                    "gold": character.gold,
+
+                    "strength": character.strength,
+                    "agility": character.agility,
+                    "physique": character.physique,
+                    "intelligence": character.intelligence,
+                    "wisdom": character.wisdom,
+                    "charisma": character.charisma,
+                    "luck": character.luck,
+
+                    "stat_points": character.stat_points
                 }
 
                 db_logger.debug(f"Показатели персонажа для пользователя telegram_id={telegram_id} успешно получены.")

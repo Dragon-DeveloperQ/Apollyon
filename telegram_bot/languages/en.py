@@ -16,8 +16,16 @@ menu_buttons = {
 "start_task" : "▶️ Start Task",
 "complete_task" : "✅ Complete Task",
 "cancel_task_execution" : "❌ Cancel Task Execution",
-
 "show_tasks" : "📋 Show Tasks",
+"stat_points" : "📊 Очки характеристик",
+"strength" : "💪 Сила",
+"dexterity" : "🤸 Ловкость",
+"intelligence" : "🧠 Интеллект",
+"physique" : "❤️ Телосложение",
+"wisdom" : "📿 Мудрость",
+"charisma" : "🗣 Харизма",
+"luck" : "🍀 Удача",
+
 
 "cancel_task_creation" : "❌ Cancel Task Creation",
 "cancel_task_change" : "❌ Отменить изменение задания",

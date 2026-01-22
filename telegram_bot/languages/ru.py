@@ -16,8 +16,16 @@ menu_buttons = {
 "start_task" : "▶️ Начать задание",
 "complete_task" : "✅ Завершить задание",
 "cancel_task_execution" : "❌ Отменить выполнение",
-
 "show_tasks" : "📋 Показать задания",
+"stat_points" : "📊 Очки характеристик",
+"strength" : "💪 Сила",
+"dexterity" : "🤸 Ловкость",
+"intelligence" : "🧠 Интеллект",
+"physique" : "❤️ Телосложение",
+"wisdom" : "📿 Мудрость",
+"charisma" : "🗣 Харизма",
+"luck" : "🍀 Удача",
+
 
 "cancel_task_creation" : "❌ Отменить создание задания",
 "cancel_task_change" : "❌ Выйти из изменения задания",
@@ -49,6 +57,7 @@ text = {
 "task_created_successfully" : "Задание успешно создано!",
 "enter_task_number" : "Введите номер задания: ",
 "what_to_change_in_task" : "Что нужно изменить в задании?",
+"stat_points_upgrade" : "Какие характеристики вы хотите прокачать?",
 
 "cancel_task_execution" : "Завершение задания отменено.",
 "cancel_task_change" : "Выйти из изменения задания.",

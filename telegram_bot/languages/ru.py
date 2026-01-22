@@ -4,6 +4,7 @@ menu_buttons = {
 "tasks" : "📚 Задания",
 "settings" : "⚙️ Настройки",
 "back" : "⬅️ Назад",
+"back_from_stats" : "⬅️ В профиль",
 "new_task" : "📝 Новое задание",
 "change_task" : "🪄 Изменить задание",
 "change_task_name" : "✏️ Изменить название",
@@ -18,14 +19,22 @@ menu_buttons = {
 "cancel_task_execution" : "❌ Отменить выполнение",
 "show_tasks" : "📋 Показать задания",
 "stat_points" : "📊 Очки характеристик",
+
 "strength" : "💪 Сила",
-"dexterity" : "🤸 Ловкость",
+"agility" : "🤸 Ловкость",
 "intelligence" : "🧠 Интеллект",
 "physique" : "❤️ Телосложение",
-"wisdom" : "📿 Мудрость",
-"charisma" : "🗣 Харизма",
+"wisdom" : "📚 Мудрость",
+"charisma" : "🎭 Харизма",
 "luck" : "🍀 Удача",
 
+"strength_short" : "💪",
+"agility_short" : "🤸",
+"physique_short" : "❤️",
+"intelligence_short" : "🧠",
+"wisdom_short" : "📚",
+"charisma_short" : "🎭",
+"luck_short" : "🍀",
 
 "cancel_task_creation" : "❌ Отменить создание задания",
 "cancel_task_change" : "❌ Выйти из изменения задания",
@@ -58,6 +67,7 @@ text = {
 "enter_task_number" : "Введите номер задания: ",
 "what_to_change_in_task" : "Что нужно изменить в задании?",
 "stat_points_upgrade" : "Какие характеристики вы хотите прокачать?",
+"invalid_stat_choice" : "Пожалуйста, выберите корректную характеристику для прокачки.",
 
 "cancel_task_execution" : "Завершение задания отменено.",
 "cancel_task_change" : "Выйти из изменения задания.",
@@ -90,5 +100,15 @@ text = {
     "{description}\n"
     "Средняя сложность: {difficulty}\n"
     "Текущая серия: {streak}\n",
+
+"stat_points_info" :
+    "💪 Сила: {strength}\n"
+    "🤸 Ловкость: {agility}\n"
+    "❤️ Телосложение: {physique}\n"
+    "🧠 Интеллект: {intelligence}\n"
+    "📚 Мудрость: {wisdom}\n"
+    "🎭 Харизма: {charisma}\n"
+    "🍀 Удача: {luck}\n"
+    "\nДоступные очки для распределения: {stat_points}"
 
 }

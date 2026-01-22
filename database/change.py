@@ -83,6 +83,26 @@ async def set_task_completed_at(session, logger, task_id: int):
     
     return task.completed_at
 
+# --------- Характеристики персонажа ---------
+async def increment_character_stat(session, logger, character_id: int, stat_key: str, increment_value: int = 1):
+    character = await read.get_character_by_id(session, logger, character_id)
+    if character is None:
+        logger.error(f"Персонаж с id={character_id} не найден. Характеристика не увеличена.")
+        return None
+
+    if not hasattr(character, stat_key):
+        logger.error(f"Характеристика '{stat_key}' не найдена у персонажа с id={character_id}.")
+        return None
+
+    current_value = getattr(character, stat_key)
+    new_value = current_value + increment_value
+    setattr(character, stat_key, new_value)
+
+    session.add(character)
+    await session.flush()
+    
+    return getattr(character, stat_key)
+
 
 # --------- Streak ---------
 async def increment_task_streak(session, logger, task_id: int):
@@ -144,6 +164,7 @@ async def change_character_exp(session, logger, character_id: int, new_exp: int)
     await session.flush()
     
     return character.exp
+
 
 # --------- Смена часового пояса пользователя ---------
 async def change_user_timezone(session, logger, user_id: int, new_timezone: str):

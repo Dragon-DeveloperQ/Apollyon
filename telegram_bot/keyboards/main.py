@@ -105,7 +105,7 @@ async def get_task_delete_keyboard(language_code: str):
 
 async def get_profile_keyboard(language_code: str):
     profile_keyboard_list = [
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["tasks"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["stat_points"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["stat_points"])],
         [KeyboardButton(text=languages_menu_buttons_list[language_code]["back"])]
     ]
     profile_keyboard = ReplyKeyboardMarkup(keyboard=profile_keyboard_list, resize_keyboard=True)
@@ -113,9 +113,9 @@ async def get_profile_keyboard(language_code: str):
 
 async def get_stat_points_keyboard(language_code: str):
     stat_points_keyboard_list = [
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["strength"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["dexterity"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["intelligence"])],
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["physique"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["wisdom"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["charisma"])],
-        [KeyboardButton(text=languages_menu_buttons_list[language_code]["luck"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["profile"])]
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["strength_short"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["agility_short"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["intelligence_short"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["physique_short"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["wisdom_short"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["charisma_short"])],
+        [KeyboardButton(text=languages_menu_buttons_list[language_code]["luck_short"]), KeyboardButton(text=languages_menu_buttons_list[language_code]["back_from_stats"])]
     ]
     stat_points_keyboard = ReplyKeyboardMarkup(keyboard=stat_points_keyboard_list, resize_keyboard=True)
     return stat_points_keyboard

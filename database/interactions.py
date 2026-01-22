@@ -244,7 +244,6 @@ async def level_up_character(session, telegram_id: int, levels: int = 1):
         db_logger.error(f"Ошибка при повышении уровня персонажа для пользователя telegram_id={telegram_id}: {e}")
         return False
     
-
 # --------- Проверка стрика задания ---------
 async def check_task_streak(session, task_id: int):
     task = await read.get_task_by_id(session, db_logger, task_id)
@@ -475,7 +474,6 @@ async def change_task_description(task_id: int, new_description: str):
         db_logger.error(f"Ошибка при смене описания задания id={task_id}: {e}")
         return False
 
-
 # --------- Получение всех заданий для персонажа ---------
 async def get_all_tasks_for_character(character_id: int):
     '''
@@ -585,6 +583,84 @@ async def get_task_by_telegram_id(task_id: int):
         db_logger.error(f"Ошибка при получении задания id={task_id}: {e}")
         return None
 
+# --------- Характеристики персонажа ---------
+async def increment_character_stat(telegram_id: int, stat_name: str):
+    '''
+    Увеличивает характеристику stat_name персонажа пользователя с заданным telegram_id на 1.
+    '''
+
+    db_logger.info(f"Увеличение характеристики '{stat_name}' персонажа пользователя telegram_id={telegram_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+                if user is None:
+                    db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Увеличение характеристики не выполнено.")
+                    return False
+
+                character = await read.get_character_by_user_id(session, db_logger, user.id)
+                if character is None:
+                    db_logger.error(f"Персонаж пользователя с telegram_id={telegram_id} не найден. Увеличение характеристики не выполнено.")
+                    return False
+
+                if character.stat_points <= 0:
+                    db_logger.debug(f"Недостаточно очков характеристик для персонажа пользователя telegram_id={telegram_id}. Увеличение характеристики не выполнено.")
+                    return False
+
+                await change.increment_character_stat(session, db_logger, character.id, stat_name)
+                await change.increment_character_stat_points(session, db_logger, character.id, -1)
+
+                db_logger.info(f"Характеристика '{stat_name}' персонажа пользователя telegram_id={telegram_id} успешно увеличена.")
+                return True
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при увеличении характеристики '{stat_name}' персонажа пользователя telegram_id={telegram_id}: {e}")
+        return False
+async def get_character_stats(telegram_id: int):
+    '''
+    Получает показатели персонажа пользователя с заданным telegram_id.
+    Возвращает словарь с показателями или None в случае ошибки.
+    '''
+
+    #db_logger.debug(f"Получение показателей персонажа для пользователя telegram_id={telegram_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+                character = await read.get_character_by_user_id(session, db_logger, user.id)
+                if character is None:
+                    db_logger.error(f"Персонаж пользователя с telegram_id={telegram_id} не найден. Невозможно получить показатели.")
+                    return None
+
+                stats = {
+                    "username": user.username,
+                    "level": character.level,
+                    "exp": character.exp,
+                    "gold": character.gold,
+
+                    "strength": character.strength,
+                    "agility": character.agility,
+                    "physique": character.physique,
+                    "intelligence": character.intelligence,
+                    "wisdom": character.wisdom,
+                    "charisma": character.charisma,
+                    "luck": character.luck,
+
+                    "stat_points": character.stat_points
+                }
+
+                #db_logger.debug(f"Показатели персонажа для пользователя telegram_id={telegram_id} успешно получены.")
+                return stats
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при получении показателей персонажа для пользователя telegram_id={telegram_id}: {e}")
+        return None
+
+
 # --------- Смена языка пользователя ---------
 async def change_user_language(telegram_id: int, new_language: str):
     '''
@@ -637,51 +713,6 @@ async def get_user_language(telegram_id: int):
     except Exception as e:
         db_logger.error(f"Ошибка при получении языка пользователя telegram_id={telegram_id}: {e}")
         return None
-
-
-# --------- Получение показателей персонажа ---------
-async def get_character_stats(telegram_id: int):
-    '''
-    Получает показатели персонажа пользователя с заданным telegram_id.
-    Возвращает словарь с показателями или None в случае ошибки.
-    '''
-
-    db_logger.debug(f"Получение показателей персонажа для пользователя telegram_id={telegram_id}...")
-
-    try:
-        async with database.db.async_session_maker() as session:
-            async with session.begin():
-
-                user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
-                character = await read.get_character_by_user_id(session, db_logger, user.id)
-                if character is None:
-                    db_logger.error(f"Персонаж пользователя с telegram_id={telegram_id} не найден. Невозможно получить показатели.")
-                    return None
-
-                stats = {
-                    "username": user.username,
-                    "level": character.level,
-                    "exp": character.exp,
-                    "gold": character.gold,
-
-                    "strength": character.strength,
-                    "agility": character.agility,
-                    "physique": character.physique,
-                    "intelligence": character.intelligence,
-                    "wisdom": character.wisdom,
-                    "charisma": character.charisma,
-                    "luck": character.luck,
-
-                    "stat_points": character.stat_points
-                }
-
-                db_logger.debug(f"Показатели персонажа для пользователя telegram_id={telegram_id} успешно получены.")
-                return stats
-
-    except Exception as e:
-        db_logger.error(f"Ошибка при получении показателей персонажа для пользователя telegram_id={telegram_id}: {e}")
-        return None
-
 
 # --------- Сброс персонажа пользователя ---------
 async def reset_user_character(telegram_id: int):

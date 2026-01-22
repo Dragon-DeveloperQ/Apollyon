@@ -31,4 +31,4 @@ def calculateExpToLevelUp(level:int):
     ''' 
     f(n) = b + n^(g)
     '''
-    return round(LEVEL_BASE + level**(LEVEL_GROWTH), 2)
+    return round(LEVEL_BASE + level**(1/LEVEL_GROWTH), 2)

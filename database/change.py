@@ -110,6 +110,30 @@ async def reset_task_streak(session, logger, task_id: int):
     
     return task.streak
 
+# --------- Уровень ---------
+async def increment_character_level(session, logger, character_id: int):
+    character = await read.get_character_by_id(session, logger, character_id)
+    if character is None:
+        logger.error(f"Персонаж с id={character_id} не найден. Уровень не увеличен.")
+        return None
+
+    character.level += 1
+    session.add(character)
+    await session.flush()
+    
+    return character.level
+async def change_character_exp(session, logger, character_id: int, new_exp: int):
+    character = await read.get_character_by_id(session, logger, character_id)
+    if character is None:
+        logger.error(f"Персонаж с id={character_id} не найден. Опыт не изменен.")
+        return None
+
+    character.exp = new_exp
+    session.add(character)
+    await session.flush()
+    
+    return character.exp
+
 # --------- Смена часового пояса пользователя ---------
 async def change_user_timezone(session, logger, user_id: int, new_timezone: str):
     user = await read.get_user_by_telegram_id(session, logger, user_id)

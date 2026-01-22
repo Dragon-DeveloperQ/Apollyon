@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 import math
 from turtle import title
+
+from numpy import character
 import database
 import logger as logger
 
@@ -134,10 +136,6 @@ async def deactivate_task(task_id: int):
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():
-                # Смена состояния задания на неактивное
-                await change.change_task_active_state(session, db_logger, task_id, is_active=False)
-                # Установить последнее время выполнения задания
-                await change.set_task_completed_at(session, db_logger, task_id)
 
                 difficulty = round(await calculate_task_difficulty(session, task_id), 2)
                 if difficulty is None:
@@ -147,20 +145,28 @@ async def deactivate_task(task_id: int):
                     db_logger.info(f"Недостаточная сложность для деактивации задания id={task_id}. Требуется минимум 1, получено {difficulty}.")
                     return None
                 
-                streak = await calculate_task_streak(session, task_id)
+                # Смена состояния задания на неактивное
+                await change.change_task_active_state(session, db_logger, task_id, is_active=False)
+                # Установить последнее время выполнения задания
+                await change.set_task_completed_at(session, db_logger, task_id)
+                
+                telegram_id = (await read.get_user_by_task_id(session, db_logger, task_id)).telegram_id
+                level_up = await check_character_level_up(session, telegram_id)
+                streak = await calculate_task_streak(session, task_id) - 1
+                times = await change.increment_task_completed_times(session, db_logger, task_id)
+                reward = await reward_task_completion(session, task_id, difficulty, times)
+
                 if streak is None:
                     db_logger.error(f"Ошибка при расчете стрика задания id={task_id}. Невозможно деактивировать задание.")
                     return None
                 
-                times = await change.increment_task_completed_times(session, db_logger, task_id)
-
-                reward = await reward_task_completion(session, task_id, difficulty, times)
-
                 stats = {
                     "difficulty": difficulty,
                     "streak": streak,
                     "reward": reward
                 }
+                
+                await level_up_character(session, telegram_id, level_up)
                 return stats
     except Exception as e:
         db_logger.error(f"Ошибка при деактивации задания id={task_id}: {e}")
@@ -173,6 +179,70 @@ async def hard_deactivate_task(task_id: int):
                 await change.change_task_active_state(session, db_logger, task_id, is_active=False)
     except Exception as e:
         db_logger.error(f"Ошибка при намереной деактивации задания id={task_id}: {e}")
+
+# --------- Проверка повышения уровня персонажа ---------
+async def check_character_level_up(session, telegram_id: int, level_offset: int = 0):
+    '''
+    Проверяет, достиг ли персонаж пользователя с заданным telegram_id нового уровня.
+    Возвращает необходимый опыт для повышения уровня или False в случае ошибки.
+    '''
+
+    db_logger.debug(f"Проверка повышения уровня персонажа для пользователя telegram_id={telegram_id}...")
+
+    try:
+        user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+        if user is None:
+            db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Невозможно проверить уровень.")
+            return False
+
+        character = await read.get_character_by_user_id(session, db_logger, user.id)
+        if character is None:
+            db_logger.error(f"Персонаж пользователя с telegram_id={telegram_id} не найден. Невозможно проверить уровень.")
+            return False
+
+        exp_to_level_up = core.task.calculateExpToLevelUp(character.level + 1 + level_offset)
+        if exp_to_level_up < character.exp:
+            db_logger.info(f"Персонажу пользователя telegram_id={telegram_id} хватает опыта, для повышения уровня: -> level={character.level + 1} ({exp_to_level_up}).")
+            return True
+        return False
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при проверке уровня персонажа для пользователя telegram_id={telegram_id}: {e}")
+        return False
+async def level_up_character(session, telegram_id: int, levels: int = 1):
+    '''
+    Повышает уровень персонажа пользователя с заданным telegram_id.
+    Возвращает новый уровень или False в случае ошибки.
+    '''
+
+    db_logger.debug(f"Повышение уровня персонажа для пользователя telegram_id={telegram_id}...")
+
+    try:
+        user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+        if user is None:
+            db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Невозможно повысить уровень.")
+            return False
+
+        character = await read.get_character_by_user_id(session, db_logger, user.id)
+        if character is None:
+            db_logger.error(f"Персонаж пользователя с telegram_id={telegram_id} не найден. Невозможно повысить уровень.")
+            return False
+
+        new_levels = 0
+        exp_to_level_up = core.task.calculateExpToLevelUp(character.level + 1 + new_levels)
+        while await check_character_level_up(session, telegram_id, level_offset=new_levels):
+            exp_to_level_up = core.task.calculateExpToLevelUp(character.level + 1 + new_levels)
+            await change.change_character_exp(session, db_logger, character.id, character.exp - exp_to_level_up)
+            await change.increment_character_level(session, db_logger, character.id)
+            new_levels += 1
+        
+        db_logger.info(f"Персонаж пользователя telegram_id={telegram_id} повышен на {new_levels} уровней.")
+        return new_levels
+    
+    except Exception as e:
+        db_logger.error(f"Ошибка при повышении уровня персонажа для пользователя telegram_id={telegram_id}: {e}")
+        return False
+    
 
 # --------- Проверка стрика задания ---------
 async def check_task_streak(session, task_id: int):

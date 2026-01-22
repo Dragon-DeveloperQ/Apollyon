@@ -47,16 +47,6 @@ async def main() -> None:
     middlewares.include_middlewares(dp)
     aiogram_logger.info("Middlewares подключены.")
     
-    # await database.interactions.register_new_user(1603284838, "Даша")
-
-    # await database.interactions.reward_task_completion(1)
-
-    # tasts = await database.interactions.get_all_tasks_for_character(1)
-    # for task in tasts:
-    #    aiogram_logger.info(f"Задание: {task.title}, Описание: {task.description}")
-
-
-    
     await dp.start_polling(bot)
 
 

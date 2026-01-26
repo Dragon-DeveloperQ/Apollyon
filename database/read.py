@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from database.models.models import User, UserCharacter, Task
+from database.models.models import User, UserCharacter, Task, UserPreferences
 
 # --------- Получить пользователя по ID ---------
 async def get_user_by_id(session, user_id: int):
@@ -104,3 +104,11 @@ async def get_user_by_task_id(session, logger, task_id: int):
     )
     user = result.scalar_one_or_none()
     return user
+
+# --------- Получить настройки пользователя по user_id ---------
+async def get_user_preferences_by_user_id(session, logger, user_id: int):
+    result = await session.execute(
+        select(UserPreferences).where(UserPreferences.user_id == user_id)
+    )
+    preferences = result.scalar_one_or_none()
+    return preferences

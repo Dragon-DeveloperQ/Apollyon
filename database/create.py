@@ -1,4 +1,4 @@
-from database.models.models import User, UserCharacter, Task
+from database.models.models import User, UserCharacter, Task, UserPreferences
 
 
 
@@ -14,7 +14,16 @@ async def create_user(session, logger, telegram_id: int, username: str):
 
     logger.info(f"Пользователь создан: id={user.id}")
     return user
-
+async def create_user_preferences(session, logger, user_id: int):
+    preferences = UserPreferences(
+        user_id=user_id,
+    )
+    
+    session.add(preferences)
+    await session.flush()
+    
+    logger.info(f"Предпочтения пользователя созданы: id={preferences.id}")
+    return preferences
 
 
 # --------- Создать персонажа пользователя ---------

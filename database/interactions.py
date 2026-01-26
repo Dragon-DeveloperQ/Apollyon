@@ -44,6 +44,7 @@ async def register_new_user(telegram_id: int, username: str):
                 # Попытка создать пользователя и персонажа
                 user_id = (await create.create_user(session, db_logger, telegram_id=telegram_id, username=username)).id
                 await create.create_character(session, db_logger, user_id=user_id)
+                await create.create_user_preferences(session, db_logger, user_id=user_id)
                 
                 return user
     
@@ -779,3 +780,69 @@ async def save_user_timezone(telegram_id: int, timezone_name: str):
     except Exception as e:
         db_logger.error(f"Ошибка при сохранении часового пояса для пользователя telegram_id={telegram_id}: {e}")
         return False
+    
+
+
+
+
+
+
+
+
+
+
+from datetime import datetime, timedelta
+from types import SimpleNamespace
+from sqlalchemy import select, update
+from .models import User, UserPreferences
+import database
+
+async def get_and_mark_users_for_reminder(seconds: int = 10, limit: int = 1000):
+    """
+    Асинхронно:
+      1) выбирает пользователей, у которых reminders_enabled == True и last_reminder_at is None или <= cutoff
+      2) в той же транзакции помечает last_reminder_at = now для выбранных пользователей
+      3) возвращает список объектов SimpleNamespace(id, telegram_id, reminder_text)
+    """
+    cutoff = datetime.utcnow() - timedelta(seconds=seconds)
+    now = datetime.utcnow()
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                q = (
+                    select(User.id, User.telegram_id, UserPreferences.reminder_text, UserPreferences.last_reminder_at)
+                    .join(UserPreferences, UserPreferences.user_id == User.id)
+                    .where(UserPreferences.reminders_enabled == True)
+                    .where((UserPreferences.last_reminder_at == None) | (UserPreferences.last_reminder_at <= cutoff))
+                    .limit(limit)
+                )
+                result = await session.execute(q)
+                rows = result.all()
+
+                if not rows:
+                    return []
+
+                ids = [r.id for r in rows]
+
+                # Обновляем last_reminder_at для выбранных пользователей в той же транзакции
+                await session.execute(
+                    update(UserPreferences)
+                    .where(UserPreferences.user_id.in_(ids))
+                    .values(last_reminder_at=now)
+                )
+                # commit произойдет по выходу из session.begin()
+
+        # формируем удобные объекты для отправки (делаем это после commit, но можно и до)
+        users = []
+        for r in rows:
+            users.append(SimpleNamespace(
+                id=r.id,
+                telegram_id=r.telegram_id,
+                reminder_text=(r.reminder_text or "Напоминание")
+            ))
+        return users
+
+    except Exception as e:
+        db_logger.exception("Ошибка в get_and_mark_users_for_reminder: %s", e)
+        return []

@@ -22,7 +22,22 @@ class User(Base):
     
     # Связи с другими моделями
     character = relationship("UserCharacter", back_populates="user", uselist=False)
+    preferences = relationship("UserPreferences", back_populates="user", uselist=False)
+
+
+#================ Модель предпочтений пользователя ==============
+class UserPreferences(Base):
+    __tablename__ = "user_preferences"
     
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    reminder_text = Column(Text, nullable=True)
+    reminder_interval = Column(Integer, default=1)
+    last_reminder_at = Column(DateTime(timezone=True), nullable=True)
+    reminders_enabled = Column(Boolean, default=True)
+    
+    user = relationship("User", back_populates="preferences")
 
 
 # ============== Модель персонажа пользователя =============

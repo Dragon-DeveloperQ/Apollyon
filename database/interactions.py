@@ -807,6 +807,8 @@ async def get_and_mark_users_for_reminder(seconds: int = 10, limit: int = 1000):
     cutoff = datetime.utcnow() - timedelta(seconds=seconds)
     now = datetime.utcnow()
 
+    print(cutoff, now)
+
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():
@@ -818,12 +820,14 @@ async def get_and_mark_users_for_reminder(seconds: int = 10, limit: int = 1000):
                     .limit(limit)
                 )
                 result = await session.execute(q)
-                rows = result.all()
+                users = result.all()
 
-                if not rows:
+                if not users:
                     return []
 
-                ids = [r.id for r in rows]
+                ids = []
+                for user in users:
+                    ids.append(user.id)
 
                 # Обновляем last_reminder_at для выбранных пользователей в той же транзакции
                 await session.execute(
@@ -835,7 +839,7 @@ async def get_and_mark_users_for_reminder(seconds: int = 10, limit: int = 1000):
 
         # формируем удобные объекты для отправки (делаем это после commit, но можно и до)
         users = []
-        for r in rows:
+        for r in users:
             users.append(SimpleNamespace(
                 id=r.id,
                 telegram_id=r.telegram_id,

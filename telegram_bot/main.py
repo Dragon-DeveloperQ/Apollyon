@@ -51,7 +51,7 @@ async def main() -> None:
     middlewares.include_middlewares(dp)
     aiogram_logger.info("Middlewares подключены.")
     
-    reminder_task = asyncio.create_task(start_reminder_worker(bot, aiogram_logger, get_and_mark_callable=interactions.get_and_mark_users_for_reminder))   
+    reminder_task = asyncio.create_task(start_reminder_worker(bot, aiogram_logger))   
 
     try:
         await dp.start_polling(bot)

@@ -1,8 +1,5 @@
 from datetime import datetime, timezone
-import math
-from turtle import title
 
-from numpy import character
 import database
 import logger as logger
 
@@ -13,7 +10,7 @@ from . import change
 from . import create
 from . import read
 
-from .models import Task
+from .models import Task, UserSettings
 from database.db import db_logger
 
 from os import getenv
@@ -45,6 +42,8 @@ async def register_new_user(telegram_id: int, username: str):
                 user_id = (await create.create_user(session, db_logger, telegram_id=telegram_id, username=username)).id
                 await create.create_character(session, db_logger, user_id=user_id)
                 
+                await create.create_user_settings(session, db_logger, user_id=user_id)
+
                 return user
     
     except Exception as e:
@@ -779,3 +778,29 @@ async def save_user_timezone(telegram_id: int, timezone_name: str):
     except Exception as e:
         db_logger.error(f"Ошибка при сохранении часового пояса для пользователя telegram_id={telegram_id}: {e}")
         return False
+
+
+# --------- Получние пользователей для уведомлений ---------
+async def get_users_for_notifications():
+    '''
+    Получает всех пользователей, которые включили уведомления.
+    Возвращает список пользователей или None в случае ошибки.
+    '''
+
+    db_logger.debug(f"Получение пользователей для уведомлений...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+
+                result = await session.execute(
+                    read.select(UserSettings).where(UserSettings.notifications_enabled == True)
+                )
+                users = result.scalars().all()
+
+                db_logger.info(f"Получено {len(users)} пользователей для уведомлений.")
+                return users
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при получении пользователей для уведомлений: {e}")
+        return None

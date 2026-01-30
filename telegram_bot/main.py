@@ -46,7 +46,9 @@ async def main() -> None:
 
     middlewares.include_middlewares(dp)
     aiogram_logger.info("Middlewares подключены.")
-    
+
+    await database.interactions.get_users_for_notifications()
+
     await dp.start_polling(bot)
 
 

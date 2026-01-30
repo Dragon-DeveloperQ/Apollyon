@@ -45,3 +45,19 @@ async def create_task(session, logger, character_id: int, title: str, descriptio
     
     logger.info(f"Задание создано: id={task.id}, title='{task.title}'")
     return task
+
+
+
+# --------- Создать настройки пользователя ---------
+async def create_user_settings(session, logger, user_id: int):
+    from database.models.models import UserSettings
+
+    settings = UserSettings(
+        user_id=user_id,
+    )
+    
+    session.add(settings)
+    await session.flush()
+    
+    logger.info(f"Настройки пользователя созданы: id={settings.id}")
+    return settings

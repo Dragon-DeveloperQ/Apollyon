@@ -3,5 +3,6 @@ config/tokens.env
 __pycache__/
 *.log
 .obsidian/
+venv/
 database/tables/
 directorys.py

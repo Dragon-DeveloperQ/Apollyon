@@ -104,3 +104,18 @@ async def get_user_by_task_id(session, logger, task_id: int):
     )
     user = result.scalar_one_or_none()
     return user
+
+# --------- Получить всех пользователей для уведомлений ---------
+async def get_users_for_notifications(session, logger):
+    try:
+        users = await session.execute(
+            select(User).where(User.notifications_enabled == True)
+        )
+        users = users.scalars().all()
+
+        logger.info(f"Получено {len(users)} пользователей для уведомлений.")
+        return users
+
+    except Exception as e:
+        logger.error(f"Ошибка при получении пользователей для уведомлений: {e}")
+        return []

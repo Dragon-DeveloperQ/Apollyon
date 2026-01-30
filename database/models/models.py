@@ -22,20 +22,12 @@ class User(Base):
     
     last_reminder_at = Column(DateTime(timezone=True), nullable=True)
 
-    # Связи с другими моделями
-    character = relationship("UserCharacter", back_populates="user", uselist=False)
-    settings = relationship("UserSettings", back_populates="user", uselist=False)
-
-#================== Модель настроек пользователя ==================
-class UserSettings(Base):
-    __tablename__ = "user_settings"
-    
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-
+    # Настройки пользователя
     notifications_enabled = Column(Boolean, default=True)
 
-    user = relationship("User", back_populates="settings")
+    # Связи с другими моделями
+    character = relationship("UserCharacter", back_populates="user", uselist=False)
+
 
 
 # ============== Модель персонажа пользователя =============

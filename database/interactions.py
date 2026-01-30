@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+from aiogram import Bot
+
 import database
 import logger as logger
 
@@ -10,7 +12,7 @@ from . import change
 from . import create
 from . import read
 
-from .models import Task, UserSettings
+from .models import Task
 from database.db import db_logger
 
 from os import getenv
@@ -41,8 +43,6 @@ async def register_new_user(telegram_id: int, username: str):
                 # Попытка создать пользователя и персонажа
                 user_id = (await create.create_user(session, db_logger, telegram_id=telegram_id, username=username)).id
                 await create.create_character(session, db_logger, user_id=user_id)
-                
-                await create.create_user_settings(session, db_logger, user_id=user_id)
 
                 return user
     
@@ -780,7 +780,7 @@ async def save_user_timezone(telegram_id: int, timezone_name: str):
         return False
 
 
-# --------- Получние пользователей для уведомлений ---------
+# --------- Уведомлений ---------
 async def get_users_for_notifications():
     '''
     Получает всех пользователей, которые включили уведомления.
@@ -793,10 +793,7 @@ async def get_users_for_notifications():
         async with database.db.async_session_maker() as session:
             async with session.begin():
 
-                result = await session.execute(
-                    read.select(UserSettings).where(UserSettings.notifications_enabled == True)
-                )
-                users = result.scalars().all()
+                users = await read.get_users_for_notifications(session, db_logger)
 
                 db_logger.info(f"Получено {len(users)} пользователей для уведомлений.")
                 return users
@@ -804,3 +801,22 @@ async def get_users_for_notifications():
     except Exception as e:
         db_logger.error(f"Ошибка при получении пользователей для уведомлений: {e}")
         return None
+
+async def send_notification(bot : Bot, telegram_id: int):
+    '''
+    Отправляет уведомление пользователю с заданным telegram_id.
+    '''
+
+    db_logger.info(f"Отправка уведомления пользователю telegram_id={telegram_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                await bot.send_message(chat_id=telegram_id, text="⏰ Пора выполнить ваше задание! Удачи в ваших приключениях! 🗡️📚")
+                await change.send_notification_to_user(session, db_logger, telegram_id)
+                db_logger.info(f"Уведомление пользователю telegram_id={telegram_id} успешно отправлено.")
+                return True
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при отправке уведомления пользователю telegram_id={telegram_id}: {e}")
+        return False

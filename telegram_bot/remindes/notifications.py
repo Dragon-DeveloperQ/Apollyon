@@ -2,21 +2,20 @@ import asyncio
 import logging
 from datetime import datetime
 from aiogram import Bot
-from typing import Callable
 
-from database.interactions import get_users_for_notifications
+from database.interactions import get_users_for_notifications, send_notification
 
 from os import getenv
 from dotenv import load_dotenv
 load_dotenv("../config/core.env")
 
-NOTIFICATION_CHECK_INTERVAL = int(getenv("NOTIFICATION_CHECK_INTERVAL"))
+NOTIFICATION_SEND_INTERVAL = int(getenv("NOTIFICATION_SEND_INTERVAL"))
 NOTIFICATION_DELAY = float(getenv("NOTIFICATION_DELAY"))
+NOTIFICATION_CHECK_DELAY = int(getenv("NOTIFICATION_CHECK_DELAY"))
 
 async def start_reminder_worker(
         bot: Bot,
         logger: logging.Logger,
-        tick_seconds: int = 10,
     ):
 
 
@@ -31,8 +30,11 @@ async def start_reminder_worker(
             # Если есть пользователи, которым нужно отправить напоминание
             for user in users:
                 try:
-                    await bot.send_message(user.telegram_id, "Напоминание")  # Фиксированное сообщение
-                    logger.info("Sent reminder to %s", user.telegram_id)
+                    if (user.last_reminder_at - datetime.utcnow()).total_seconds() < NOTIFICATION_SEND_INTERVAL :
+                        await send_notification(bot, user.telegram_id)
+
+                        logger.info("Sent reminder to %s", user.telegram_id)
+                    
                 except Exception as e:
                     logger.error("Failed to send reminder to %s: %s", user.telegram_id, str(e))
 
@@ -43,7 +45,9 @@ async def start_reminder_worker(
             logger.exception("Unhandled error in reminder worker: %s", e)
 
         # Ждём, чтобы начать следующий цикл
-        elapsed_time = (datetime.utcnow() - start_time).total_seconds()
-        wait_time = max(0, tick_seconds - elapsed_time)  # Учитываем время выполнения цикла
-        if wait_time > 0:
-            await asyncio.sleep(wait_time)
+        # elapsed_time = (datetime.utcnow() - start_time).total_seconds()
+        # wait_time = max(0, tick_seconds - elapsed_time)  # Учитываем время выполнения цикла
+        #if wait_time > 0:
+        #    await asyncio.sleep(wait_time)
+
+        await asyncio.sleep(NOTIFICATION_CHECK_DELAY)  # Фиксированная пауза между циклами

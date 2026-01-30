@@ -1,1 +1,1 @@
-import notifications
+from . import notifications

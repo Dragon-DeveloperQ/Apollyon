@@ -2,6 +2,7 @@
 import sys
 from pathlib import Path
 
+
 ROOT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
@@ -15,6 +16,7 @@ import middlewares
 import handlers
 import logger
 import database
+import remindes
 
 # Initialize logger
 aiogram_logger = logger.getLogger("aiogram")
@@ -47,7 +49,7 @@ async def main() -> None:
     middlewares.include_middlewares(dp)
     aiogram_logger.info("Middlewares подключены.")
 
-    await database.interactions.get_users_for_notifications()
+    await remindes.notifications.start_reminder_worker(bot, aiogram_logger)
 
     await dp.start_polling(bot)
 

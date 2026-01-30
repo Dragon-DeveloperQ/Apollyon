@@ -231,3 +231,15 @@ async def change_task_description(session, logger, task_id: int, new_description
     await session.flush()
     
     return task.description
+
+# --------- Отправка уведомления пользователю ---------
+async def send_notification_to_user(session, logger, telegram_id: int):
+    user = await read.get_user_by_telegram_id(session, logger, telegram_id)
+    if user is None:
+        logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Уведомление не отправлено.")
+        return None
+    user.last_reminder_at = datetime.now(timezone.utc)
+    session.add(user)
+    await session.flush()
+
+    return user.last_reminder_at

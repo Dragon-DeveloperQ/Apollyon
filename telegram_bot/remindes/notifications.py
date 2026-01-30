@@ -9,9 +9,9 @@ from os import getenv
 from dotenv import load_dotenv
 load_dotenv("../config/core.env")
 
-NOTIFICATION_SEND_INTERVAL = int(getenv("NOTIFICATION_SEND_INTERVAL"))
+NOTIFICATION_SEND_INTERVAL = float(getenv("NOTIFICATION_SEND_INTERVAL"))
 NOTIFICATION_DELAY = float(getenv("NOTIFICATION_DELAY"))
-NOTIFICATION_CHECK_DELAY = int(getenv("NOTIFICATION_CHECK_DELAY"))
+NOTIFICATION_CHECK_DELAY = float(getenv("NOTIFICATION_CHECK_DELAY"))
 
 async def start_reminder_worker(
         bot: Bot,
@@ -30,7 +30,8 @@ async def start_reminder_worker(
             # Если есть пользователи, которым нужно отправить напоминание
             for user in users:
                 try:
-                    if (user.last_reminder_at - datetime.utcnow()).total_seconds() < NOTIFICATION_SEND_INTERVAL :
+                    if ((datetime.utcnow() - user.last_reminder_at).total_seconds()) > NOTIFICATION_SEND_INTERVAL :
+                        print((datetime.utcnow() - user.last_reminder_at).total_seconds())
                         await send_notification(bot, user.telegram_id)
 
                         logger.info("Sent reminder to %s", user.telegram_id)

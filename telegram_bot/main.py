@@ -8,7 +8,7 @@ ROOT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
 from database import interactions
-from telegram_bot.services.remindes import start_reminder_worker
+from telegram_bot.services.notifications import start_reminder_worker
 
 import asyncio
 

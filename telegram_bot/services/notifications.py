@@ -2,7 +2,6 @@ import asyncio
 import logging
 from aiogram import Bot
 from database import interactions
-from database.models.models import User, UserPreferences  
 
 
 from dotenv import load_dotenv
@@ -26,7 +25,7 @@ async def start_reminder_worker(
 
     while True:
         try:
-            users = await interactions.get_and_mark_users_for_reminder()
+            users = await interactions.get_users_for_notifications()
             if users:
                 logger.info("Reminders: found %d users", len(users))
                 for user in users:

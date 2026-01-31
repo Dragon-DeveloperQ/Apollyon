@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
-import math
-from turtle import title
 
-from numpy import character
+from aiogram import Bot
+
 import database
 import logger as logger
 
@@ -44,8 +43,7 @@ async def register_new_user(telegram_id: int, username: str):
                 # Попытка создать пользователя и персонажа
                 user_id = (await create.create_user(session, db_logger, telegram_id=telegram_id, username=username)).id
                 await create.create_character(session, db_logger, user_id=user_id)
-                await create.create_user_preferences(session, db_logger, user_id=user_id)
-                
+
                 return user
     
     except Exception as e:
@@ -780,73 +778,45 @@ async def save_user_timezone(telegram_id: int, timezone_name: str):
     except Exception as e:
         db_logger.error(f"Ошибка при сохранении часового пояса для пользователя telegram_id={telegram_id}: {e}")
         return False
-    
 
 
+# --------- Уведомлений ---------
+async def get_users_for_notifications():
+    '''
+    Получает всех пользователей, которые включили уведомления.
+    Возвращает список пользователей или None в случае ошибки.
+    '''
 
-
-
-
-
-
-
-
-from datetime import datetime, timedelta
-from types import SimpleNamespace
-from sqlalchemy import select, update
-from .models import User, UserPreferences
-import database
-
-async def get_and_mark_users_for_reminder(seconds: int = 10, limit: int = 1000):
-    """
-    Асинхронно:
-      1) выбирает пользователей, у которых reminders_enabled == True и last_reminder_at is None или <= cutoff
-      2) в той же транзакции помечает last_reminder_at = now для выбранных пользователей
-      3) возвращает список объектов SimpleNamespace(id, telegram_id, reminder_text)
-    """
-    cutoff = datetime.utcnow() - timedelta(seconds=seconds)
-    now = datetime.utcnow()
-
-    print(cutoff, now)
+    db_logger.debug(f"Получение пользователей для уведомлений...")
 
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():
-                q = (
-                    select(User.id, User.telegram_id, UserPreferences.reminder_text, UserPreferences.last_reminder_at)
-                    .join(UserPreferences, UserPreferences.user_id == User.id)
-                    .where(UserPreferences.reminders_enabled == True)
-                    .where((UserPreferences.last_reminder_at == None) | (UserPreferences.last_reminder_at <= cutoff))
-                    .limit(limit)
-                )
-                result = await session.execute(q)
-                users = result.all()
 
-                if not users:
-                    return []
+                users = await read.get_users_for_notifications(session, db_logger)
 
-                ids = []
-                for user in users:
-                    ids.append(user.id)
-
-                # Обновляем last_reminder_at для выбранных пользователей в той же транзакции
-                await session.execute(
-                    update(UserPreferences)
-                    .where(UserPreferences.user_id.in_(ids))
-                    .values(last_reminder_at=now)
-                )
-                # commit произойдет по выходу из session.begin()
-
-        # формируем удобные объекты для отправки (делаем это после commit, но можно и до)
-        users = []
-        for r in users:
-            users.append(SimpleNamespace(
-                id=r.id,
-                telegram_id=r.telegram_id,
-                reminder_text=(r.reminder_text or "Напоминание")
-            ))
-        return users
+                db_logger.info(f"Получено {len(users)} пользователей для уведомлений.")
+                return users
 
     except Exception as e:
-        db_logger.exception("Ошибка в get_and_mark_users_for_reminder: %s", e)
-        return []
+        db_logger.error(f"Ошибка при получении пользователей для уведомлений: {e}")
+        return None
+
+async def send_notification(bot : Bot, telegram_id: int):
+    '''
+    Отправляет уведомление пользователю с заданным telegram_id.
+    '''
+
+    db_logger.info(f"Отправка уведомления пользователю telegram_id={telegram_id}...")
+
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                await bot.send_message(chat_id=telegram_id, text="⏰ Пора выполнить ваше задание! Удачи в ваших приключениях! 🗡️📚")
+                await change.send_notification_to_user(session, db_logger, telegram_id)
+                db_logger.info(f"Уведомление пользователю telegram_id={telegram_id} успешно отправлено.")
+                return True
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при отправке уведомления пользователю telegram_id={telegram_id}: {e}")
+        return False

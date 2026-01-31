@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from database.models.models import User, UserCharacter, Task, UserPreferences
+from database.models.models import User, UserCharacter, Task
 
 # --------- Получить пользователя по ID ---------
 async def get_user_by_id(session, user_id: int):

@@ -1,2 +1,2 @@
 from .models import Base
-from .models import Task, User, UserCharacter, UserPreferences
+from .models import Task, User, UserCharacter

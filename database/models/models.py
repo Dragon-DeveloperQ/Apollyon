@@ -29,7 +29,6 @@ class User(Base):
     character = relationship("UserCharacter", back_populates="user", uselist=False)
 
 
-
 # ============== Модель персонажа пользователя =============
 class UserCharacter(Base):
     __tablename__ = "user_characters"

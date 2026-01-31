@@ -53,9 +53,14 @@ async def main() -> None:
     middlewares.include_middlewares(dp)
     aiogram_logger.info("Middlewares подключены.")
 
-    asyncio.create_task(remindes.notifications.start_reminder_worker(bot, aiogram_logger))
+    remindestask = asyncio.create_task(remindes.notifications.start_reminder_worker(bot, aiogram_logger))
 
-    await dp.start_polling(bot)
+    try:
+        await dp.start_polling(bot)
+    finally:
+        remindestask.cancel()
+        await bot.session.close()
+
 
 
 if __name__ == "__main__":

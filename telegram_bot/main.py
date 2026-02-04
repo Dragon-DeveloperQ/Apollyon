@@ -8,7 +8,7 @@ ROOT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
 from database import interactions
-from telegram_bot.remindes.notifications import start_reminder_worker
+from telegram_bot.remindes.reminders import start_reminder_worker
 
 import asyncio
 
@@ -53,7 +53,7 @@ async def main() -> None:
     middlewares.include_middlewares(dp)
     aiogram_logger.info("Middlewares подключены.")
 
-    remindestask = asyncio.create_task(remindes.notifications.start_reminder_worker(bot, aiogram_logger))
+    remindestask = asyncio.create_task(remindes.reminders.start_reminder_worker(bot, aiogram_logger))
 
     try:
         await dp.start_polling(bot)

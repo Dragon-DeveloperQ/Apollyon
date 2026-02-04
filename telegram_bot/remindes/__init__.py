@@ -1,1 +1,1 @@
-from . import notifications
+from . import reminders

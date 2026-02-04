@@ -119,3 +119,19 @@ async def get_users_for_notifications(session, logger):
     except Exception as e:
         logger.error(f"Ошибка при получении пользователей для уведомлений: {e}")
         return []
+async def get_users_for_reminders(session, logger):
+    try:
+        users = await session.execute(
+            select(User).where(
+                User.reminders_enabled == True,
+                User.is_active == True
+            )
+        )
+        users = users.scalars().all()
+
+        logger.info(f"Получено {len(users)} пользователей для напоминаний.")
+        return users
+
+    except Exception as e:
+        logger.error(f"Ошибка при получении пользователей для напоминаний: {e}")
+        return []

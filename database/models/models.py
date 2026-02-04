@@ -22,10 +22,11 @@ class User(Base):
     
     last_reminder_at = Column(DateTime(timezone=True), nullable=True)
     
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=False)
 
     # Настройки пользователя
     notifications_enabled = Column(Boolean, default=True)
+    reminders_enabled = Column(Boolean, default=True)
 
     # Связи с другими моделями
     character = relationship("UserCharacter", back_populates="user", uselist=False)

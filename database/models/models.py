@@ -21,6 +21,8 @@ class User(Base):
     timezone = Column(String(64), nullable=False, default="UTC")
     
     last_reminder_at = Column(DateTime(timezone=True), nullable=True)
+    
+    is_active = Column(Boolean, default=True)
 
     # Настройки пользователя
     notifications_enabled = Column(Boolean, default=True)

@@ -52,6 +52,13 @@ async def change_task_active_state(session, logger, task_id: int, is_active: boo
     session.add(task)
     await session.flush()
 
+    user = await read.get_user_by_task_id(session, logger, task_id)
+    if user is None:
+        logger.error(f"Пользователь для задания с id={task_id} не найден. Состояние пользователя не изменено.")
+        return None
+    
+    user.is_active = is_active
+
     return task.is_active
 async def set_task_started_at(session, logger, task_id: int):
     

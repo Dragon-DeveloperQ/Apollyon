@@ -158,3 +158,19 @@ def get_settings_timezone_keyboard(language_code: str):
     
     settings_timezone_keyboard = ReplyKeyboardMarkup(keyboard=settings_timezone_keyboard_list, resize_keyboard=True)
     return settings_timezone_keyboard
+
+
+'''
+------------------------------------------------------------
+                        Напоминания
+------------------------------------------------------------
+'''
+
+def get_reminder_keyboard():
+    reminder_keyboard_list = [
+        [InlineKeyboardButton(text="➡️", callback_data="reminder:continue"),
+        InlineKeyboardButton(text="⏸️", callback_data="reminder:stop")]
+    ]
+    
+    reminder_keyboard = InlineKeyboardMarkup(inline_keyboard=reminder_keyboard_list)
+    return reminder_keyboard

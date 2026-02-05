@@ -14,8 +14,10 @@ async def send_reminder(session, bot : Bot, telegram_id: int, db_logger, languag
 
     db_logger.info(f"Отправка напоминания пользователю telegram_id={telegram_id}...")
 
+    from keyboards.main import get_reminder_keyboard
+
     try:
-        await bot.send_message(chat_id=telegram_id, text=get_text_by_language("reminder", language_code))
+        await bot.send_message(chat_id=telegram_id, text=get_text_by_language("reminder", language_code), reply_markup=get_reminder_keyboard())
         await change.send_reminder_to_user(session, db_logger, telegram_id)
         db_logger.info(f"Напоминание пользователю telegram_id={telegram_id} успешно отправлено.")
         return True

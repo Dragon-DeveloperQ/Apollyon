@@ -825,6 +825,7 @@ async def get_users_for_reminders():
         return None
 
 async def send_reminder(bot: Bot, telegram_id: int, language_code: str):
+    
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():

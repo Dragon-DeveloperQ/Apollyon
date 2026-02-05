@@ -38,10 +38,12 @@ class CompletedTask(StatesGroup):
 
 @router.message(F.text.in_(get_commands("tasks")))
 @router.message(F.text.in_(get_commands("show_tasks")))
-async def show_tasks_handler(message: Message, logger, language_code):
-    #logger.debug("Демонстрация заданий пользователя %s", message.from_user.id)
+async def show_tasks_handler(message: Message, logger, language_code, telegram_id=None):
     
-    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
+    if telegram_id is None:
+        telegram_id = message.from_user.id
+        
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=telegram_id)
     
     if not tasks:
         await message.answer(get_text_by_language("no_tasks", language_code), reply_markup= await get_task_keyboard(language_code))
@@ -228,43 +230,65 @@ async def process_task_completion(message: Message, state: FSMContext, logger, l
     text = (message.text or "").strip()
     data = await state.get_data()
     task_id_by_character = int(data.get("task_number"))
-    
+
     if text in get_commands("cancel_task_execution"):
-        tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
-        task = tasks[task_id_by_character - 1]
-
-        await hard_deactivate_task(task.id)
-
-        await state.clear()
-        await message.reply(get_text_by_language("cancel_task_execution", language_code))
-        await show_tasks_handler(message, logger, language_code)
-
-        logger.debug("Выполнение задания отменено пользователем %s", message.from_user.id)
+        task = await cancel_task_execution(telegram_id=message.from_user.id, task_id_by_character=task_id_by_character, state=state, message=message, logger=logger, language_code=language_code)
+        logger.debug("Выполнение задания %s отменено пользователем %s", task.title, message.from_user.id)
         return
     
     if text in get_commands("complete_task"):
-        tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
-        task = tasks[task_id_by_character - 1]
-        
-        task_complation_stats = await deactivate_task(task_id=task.id)
-        
-        if task_complation_stats is None:
-            await message.answer(get_text_by_language("insufficient_difficulty", language_code))
-            return
-
-        await state.clear()
-
-        await message.reply(get_text_by_language("task_completion", language_code).format(
-            difficulty=round(float(task_complation_stats["difficulty"]), 2),
-            streak=task_complation_stats["streak"],
-            reward=round(float(task_complation_stats["reward"]), 2)
-        ))
-
-        await show_tasks_handler(message, logger, language_code)
-
+        task = await complete_task(telegram_id=message.from_user.id, task_id_by_character=task_id_by_character, state=state, message=message, logger=logger, language_code=language_code)
         logger.debug("Задание %s завершено пользователем %s", task.title, message.from_user.id)
         return
 
+
+@router.callback_query(lambda c: c.data and c.data.startswith("reminder:"))
+async def process_reminder_callback(callback_query, state: FSMContext, logger, language_code):
+    
+    action = callback_query.data.split(":")[1]
+    data = await state.get_data()
+    task_id_by_character = int(data.get("task_number"))
+
+    if action == "continue":
+        return
+    
+    elif action == "stop":
+        task = await cancel_task_execution(telegram_id=callback_query.from_user.id, task_id_by_character=task_id_by_character, state=state, message=callback_query.message, logger=logger, language_code=language_code)
+        logger.debug("Задание %s завершено пользователем %s", task.title, callback_query.from_user.id)
+        pass
+
+
+async def cancel_task_execution(telegram_id: int, task_id_by_character: int, state: FSMContext, message: Message, logger, language_code):
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=telegram_id)
+    task = tasks[task_id_by_character - 1]
+
+    await hard_deactivate_task(task.id)
+
+    await state.clear()
+    await message.reply(get_text_by_language("cancel_task_execution", language_code))
+    
+    await show_tasks_handler(message, logger, language_code, telegram_id=telegram_id)
+    return task
+async def complete_task(telegram_id: int, task_id_by_character: int, state: FSMContext, message: Message, logger, language_code):
+    tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=telegram_id)
+    task = tasks[task_id_by_character - 1]
+        
+    task_complation_stats = await deactivate_task(task_id=task.id)
+        
+    if task_complation_stats is None:
+        await message.answer(get_text_by_language("insufficient_difficulty", language_code))
+        return
+
+    await state.clear()
+
+    await message.reply(get_text_by_language("task_completion", language_code).format(
+        difficulty=round(float(task_complation_stats["difficulty"]), 2),
+        streak=task_complation_stats["streak"],
+        reward=round(float(task_complation_stats["reward"]), 2)
+    ))
+
+    await show_tasks_handler(message, logger, language_code)
+    return task
 
 '''
 ------------------------------------

@@ -71,6 +71,12 @@ async def set_task_started_at(session, logger, task_id: int):
     session.add(task)
     await session.flush()
     
+    user = await read.get_user_by_task_id(session, logger, task_id)
+    if user is None:
+        logger.error(f"Пользователь для задания с id={task_id} не найден. Состояние пользователя не изменено.")
+        return None
+    user.last_reminder_at = datetime.now(timezone.utc)
+
     return task.started_at
 
 # --------- Установить последнее время выполнения задания ---------

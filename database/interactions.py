@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from aiogram import Bot
 
 from telegram_bot.languages import get_text_by_language
+from telegram_bot.reminders import send
 
 import database
 import logger as logger
@@ -823,21 +824,10 @@ async def get_users_for_reminders():
         db_logger.error(f"Ошибка при получении пользователей для напоминаний: {e}")
         return None
 
-async def send_notification(bot : Bot, telegram_id: int, language_code: str):
-    '''
-    Отправляет уведомление пользователю с заданным telegram_id.
-    '''
-
-    db_logger.info(f"Отправка уведомления пользователю telegram_id={telegram_id}...")
-
+async def send_notification(bot: Bot, telegram_id: int, language_code: str):
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():
-                await bot.send_message(chat_id=telegram_id, text=get_text_by_language("reminder", language_code))
-                await change.send_notification_to_user(session, db_logger, telegram_id)
-                db_logger.info(f"Уведомление пользователю telegram_id={telegram_id} успешно отправлено.")
-                return True
-
+                await send.send_notification(session, bot, telegram_id, db_logger, language_code)
     except Exception as e:
-        db_logger.error(f"Ошибка при отправке уведомления пользователю telegram_id={telegram_id}: {e}")
-        return False
+        db_logger.error(f"Ошибка при отправке уведомлений: {e}")

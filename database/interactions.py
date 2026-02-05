@@ -824,10 +824,12 @@ async def get_users_for_reminders():
         db_logger.error(f"Ошибка при получении пользователей для напоминаний: {e}")
         return None
 
-async def send_notification(bot: Bot, telegram_id: int, language_code: str):
+async def send_reminder(bot: Bot, telegram_id: int, language_code: str):
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():
-                await send.send_notification(session, bot, telegram_id, db_logger, language_code)
+                await send.send_reminder(session, bot, telegram_id, db_logger, language_code)
     except Exception as e:
         db_logger.error(f"Ошибка при отправке уведомлений: {e}")
+async def send_notification(bot: Bot, telegram_id: int, message: str):
+    pass

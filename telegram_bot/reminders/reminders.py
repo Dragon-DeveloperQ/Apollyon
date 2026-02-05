@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from aiogram import Bot
 
-from database.interactions import get_users_for_reminders, send_notification
+from database.interactions import get_users_for_reminders, send_notification, send_reminder
 
 from os import getenv
 from dotenv import load_dotenv
@@ -31,7 +31,7 @@ async def start_reminder_worker(
             for user in users:
                 try:
                     if ((datetime.utcnow() - user.last_reminder_at).total_seconds()) > REMINDERS_SEND_INTERVAL :
-                        await send_notification(bot, user.telegram_id, user.language_code)
+                        await send_reminder(bot, user.telegram_id, user.language_code)
                 except Exception as e:
                     logger.error("Ошибка отправки оповещений %s: %s", user.telegram_id, str(e))
 

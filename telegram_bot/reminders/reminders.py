@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from aiogram import Bot
 
-from database.interactions import get_users_for_reminders, send_notification, send_reminder
+from database.interactions import get_users_for_reminders, send_reminder
 
 from os import getenv
 from dotenv import load_dotenv

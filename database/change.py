@@ -254,3 +254,27 @@ async def send_reminder_to_user(session, logger, telegram_id: int):
     await session.flush()
 
     return user.last_reminder_at
+
+# --------- Reminders ---------
+async def set_reminder_pending(session, logger, telegram_id: int, pending: bool = True):
+    user = await read.get_user_by_telegram_id(session, logger, telegram_id)
+    if user is None:
+        logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Статус напоминания не обновлен.")
+        return None
+    
+    user.reminder_pending = pending
+    session.add(user)
+    await session.flush()
+
+    return user.reminder_pending
+
+async def update_reminder_pending_id(session, telegram_id: int, message_id: int):
+    user = await read.get_user_by_telegram_id(session, None, telegram_id)
+    if user is None:
+        return None
+    
+    user.reminder_pending_message_id = message_id
+    session.add(user)
+    await session.flush()
+
+    return user.reminder_pending_message_id

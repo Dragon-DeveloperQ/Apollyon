@@ -23,6 +23,8 @@ class User(Base):
     last_reminder_at = Column(DateTime(timezone=True), nullable=True)
     
     is_active = Column(Boolean, default=False)
+    reminder_pending = Column(Boolean, nullable=True, default=False)
+    reminder_pending_message_id = Column(Integer, nullable=True)
 
     # Настройки пользователя
     notifications_enabled = Column(Boolean, default=True)

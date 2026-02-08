@@ -2,9 +2,6 @@ from datetime import datetime, timezone
 
 from aiogram import Bot
 
-from telegram_bot.languages import get_text_by_language
-from telegram_bot.reminders import send
-
 import database
 import logger as logger
 
@@ -662,7 +659,6 @@ async def get_character_stats(telegram_id: int):
         db_logger.error(f"Ошибка при получении показателей персонажа для пользователя telegram_id={telegram_id}: {e}")
         return None
 
-
 # --------- Смена языка пользователя ---------
 async def change_user_language(telegram_id: int, new_language: str):
     '''
@@ -690,7 +686,6 @@ async def change_user_language(telegram_id: int, new_language: str):
     except Exception as e:
         db_logger.error(f"Ошибка при смене языка пользователя telegram_id={telegram_id}: {e}")
         return False
-
 
 # --------- Получение языка пользователя ---------
 async def get_user_language(telegram_id: int):
@@ -755,7 +750,6 @@ async def reset_user_character(telegram_id: int):
         db_logger.error(f"Ошибка при сбросе персонажа пользователя telegram_id={telegram_id}: {e}")
         return False
 
-
 # --------- Сохранение часового пояса пользователя ---------
 async def save_user_timezone(telegram_id: int, timezone_name: str):
     '''
@@ -781,7 +775,6 @@ async def save_user_timezone(telegram_id: int, timezone_name: str):
     except Exception as e:
         db_logger.error(f"Ошибка при сохранении часового пояса для пользователя telegram_id={telegram_id}: {e}")
         return False
-
 
 # --------- Уведомлений ---------
 async def get_users_for_notifications():
@@ -825,12 +818,67 @@ async def get_users_for_reminders():
         return None
 
 async def send_reminder(bot: Bot, telegram_id: int, language_code: str):
-    
+    from telegram_bot.handlers.task import cancel_task_execution
+    from telegram_bot.bot_instance import dp
+    from telegram_bot.fsm import get_fsm_context
+    from telegram_bot.reminders import send
+
+    FSMcontext = await get_fsm_context(telegram_id, bot, dp.storage)
+    data = await FSMcontext.get_data()
+    task_id_by_character = int(data.get("task_number"))
+
     try:
         async with database.db.async_session_maker() as session:
             async with session.begin():
-                await send.send_reminder(session, bot, telegram_id, db_logger, language_code)
+                pending = await read.check_reminder_pending(session, db_logger, telegram_id)
+                if pending is False:
+                    await send.send_reminder(session, bot, telegram_id, db_logger, language_code)
+                    await set_reminder_pending(session, telegram_id, language_code, pending=True)
+                    db_logger.info(f"Напоминание для пользователя telegram_id={telegram_id} было принято в прошлом.")
+        if pending:
+            db_logger.info(f"Напоминание для пользователя telegram_id={telegram_id} не было принято в прошлом")
+            await cancel_task_execution(telegram_id, task_id_by_character, FSMcontext, logger=db_logger, language_code=language_code, bot=bot)
+
+            async with database.db.async_session_maker() as session:
+                async with session.begin():
+                    message = await read.get_reminder_pending_message_id(session, db_logger, telegram_id)
+                    await bot.delete_message(
+                        chat_id=telegram_id,
+                        message_id=message
+                    )
+        
     except Exception as e:
         db_logger.error(f"Ошибка при отправке уведомлений: {e}")
+
+async def accept_reminder(telegram_id: int, language_code: str):
+    try:
+        async with database.db.async_session_maker() as session:
+            async with session.begin():
+                await set_reminder_pending(session, telegram_id, language_code, pending=False)
+    except Exception as e:
+        db_logger.error(f"Ошибка при отправке уведомлений: {e}")
+
 async def send_notification(bot: Bot, telegram_id: int, message: str):
     pass
+
+async def set_reminder_pending(session, telegram_id: int, language_code: str, pending: bool):
+    '''
+    Устанавливает статус напоминания для пользователя с заданным telegram_id.
+    '''
+
+    db_logger.info(f"Установка статуса напоминания для пользователя telegram_id={telegram_id}...")
+
+    try:
+        user = await read.get_user_by_telegram_id(session, db_logger, telegram_id)
+        if user is None:
+            db_logger.error(f"Пользователь с telegram_id={telegram_id} не найден. Установка статуса напоминания не выполнена.")
+            return False
+
+        await change.set_reminder_pending(session, db_logger, telegram_id, pending)
+        db_logger.info(f"Статус напоминания для пользователя telegram_id={telegram_id} успешно установлен.")
+        return True
+
+    except Exception as e:
+        db_logger.error(f"Ошибка при установке статуса напоминания для пользователя telegram_id={telegram_id}: {e}")
+        return False
+    

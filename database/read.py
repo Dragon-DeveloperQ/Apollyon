@@ -135,3 +135,29 @@ async def get_users_for_reminders(session, logger):
     except Exception as e:
         logger.error(f"Ошибка при получении пользователей для напоминаний: {e}")
         return []
+
+# --------- Проверить статус напоминания для пользователя ---------  
+async def check_reminder_pending(session, logger, telegram_id: int):
+    result = await session.execute(
+        select(User.reminder_pending).where(User.telegram_id == telegram_id)
+    )
+    pending = result.scalar_one_or_none()
+    return pending
+
+# --------- Найти активное задание у пользователя ---------
+async def get_active_task_by_user_id(session, logger, user_id: int):
+    result = await session.execute(
+        select(Task).join(UserCharacter).where(
+            UserCharacter.user_id == user_id,
+            Task.is_active == True
+        )
+    )
+    task = result.scalar_one_or_none()
+    return task
+
+async def get_reminder_pending_message_id(session, logger, telegram_id: int):
+    result = await session.execute(
+        select(User.reminder_pending_message_id).where(User.telegram_id == telegram_id)
+    )
+    message_id = result.scalar_one_or_none()
+    return message_id

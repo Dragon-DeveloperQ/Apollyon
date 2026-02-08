@@ -1,12 +1,14 @@
+from email.mime import message
 from aiogram import Router, F, types
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from numpy import rint
 
 from telegram_bot.keyboards.main import get_task_keyboard, task_change_cancel_keyboard, task_change_cancel_keyboard_for_description, task_change_keyboard, task_creation_keyboard1, task_creation_keyboard2, complete_task_keyboard1, complete_task_keyboard2, get_task_delete_keyboard
 from telegram_bot.languages import get_commands, get_text_by_language
-from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id, activate_task, deactivate_task, hard_deactivate_task, reset_streaks_for_character_tasks, delete_task, change_task_name, change_task_description, get_task_by_telegram_id, get_task_by_id
+from database.interactions import create_task_for_character_by_telegram_id, get_all_tasks_for_character_by_telegram_id, activate_task, deactivate_task, hard_deactivate_task, reset_streaks_for_character_tasks, delete_task, change_task_name, change_task_description, get_task_by_telegram_id, get_task_by_id, accept_reminder
 
 from datetime import datetime, timezone
 
@@ -166,6 +168,10 @@ async def complete_task_handler(message: Message, state: FSMContext, logger, lan
         await message.answer("У вас нет заданий для выполнения.", reply_markup= await get_task_keyboard(language_code))
         return
     elif len(tasks) == 1:
+    
+        # Сохраняем
+        await state.update_data(task_number=123)
+
         selected_task = tasks[0]
         logger.info("Задание %s начато пользователем %s", selected_task.title, message.from_user.id)
         await activate_task(selected_task.id)
@@ -201,6 +207,9 @@ async def process_task_selection_for_completion(message: Message, state: FSMCont
         return
 
     task_number = int(text)
+
+    
+
     await state.update_data(task_number=task_number)
 
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=message.from_user.id)
@@ -250,45 +259,60 @@ async def process_reminder_callback(callback_query, state: FSMContext, logger, l
     task_id_by_character = int(data.get("task_number"))
 
     if action == "continue":
-
+        await accept_reminder(telegram_id=callback_query.from_user.id, language_code=language_code)
         await callback_query.message.delete()
         return
     
     elif action == "stop":
         task = await cancel_task_execution(telegram_id=callback_query.from_user.id, task_id_by_character=task_id_by_character, state=state, message=callback_query.message, logger=logger, language_code=language_code)
-        await callback_query.message.delete()
+        
+        await callback_query.message.edit_reply_markup(reply_markup=None)
         logger.debug("Задание %s завершено пользователем %s", task.title, callback_query.from_user.id)
-        pass
+        return
 
+async def cancel_task_execution(telegram_id: int, task_id_by_character: int, state: FSMContext, message: Message=None, bot=None, logger=None, language_code=None):
+    await accept_reminder(telegram_id=telegram_id, language_code=language_code)
 
-async def cancel_task_execution(telegram_id: int, task_id_by_character: int, state: FSMContext, message: Message, logger, language_code):
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=telegram_id)
     task = tasks[task_id_by_character - 1]
 
     await hard_deactivate_task(task.id)
 
     await state.clear()
-    await message.reply(get_text_by_language("cancel_task_execution", language_code))
-    
-    await show_tasks_handler(message, logger, language_code, telegram_id=telegram_id)
+    if message is None:
+        await bot.send_message(telegram_id, get_text_by_language("cancel_task_execution", language_code), reply_markup= await get_task_keyboard(language_code))
+    else:
+        await message.reply(get_text_by_language("cancel_task_execution", language_code))
+        await show_tasks_handler(message, logger, language_code, telegram_id=telegram_id)
     return task
-async def complete_task(telegram_id: int, task_id_by_character: int, state: FSMContext, message: Message, logger, language_code):
+
+async def complete_task(telegram_id: int, task_id_by_character: int, state: FSMContext, message: Message=None, bot=None, logger=None, language_code=None):
     tasks = await get_all_tasks_for_character_by_telegram_id(telegram_id=telegram_id)
     task = tasks[task_id_by_character - 1]
         
     task_complation_stats = await deactivate_task(task_id=task.id)
         
     if task_complation_stats is None:
-        await message.answer(get_text_by_language("insufficient_difficulty", language_code))
+        if message is None:
+            await bot.send_message(telegram_id, get_text_by_language("insufficient_difficulty", language_code))
+        else:
+            await message.answer(get_text_by_language("insufficient_difficulty", language_code))
         return
 
     await state.clear()
 
-    await message.reply(get_text_by_language("task_completion", language_code).format(
-        difficulty=round(float(task_complation_stats["difficulty"]), 2),
-        streak=task_complation_stats["streak"],
-        reward=round(float(task_complation_stats["reward"]), 2)
-    ))
+    if message is None:
+        await bot.send_message(telegram_id, get_text_by_language("task_completion", language_code).format(
+            difficulty=round(float(task_complation_stats["difficulty"]), 2),
+            streak=task_complation_stats["streak"],
+            reward=round(float(task_complation_stats["reward"]), 2)
+        ))
+    else:
+        await message.reply(get_text_by_language("task_completion", language_code).format(
+            difficulty=round(float(task_complation_stats["difficulty"]), 2),
+            streak=task_complation_stats["streak"],
+            reward=round(float(task_complation_stats["reward"]), 2)
+        ))
 
     await show_tasks_handler(message, logger, language_code)
     return task

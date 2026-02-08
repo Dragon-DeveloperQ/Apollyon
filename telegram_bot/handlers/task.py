@@ -250,10 +250,13 @@ async def process_reminder_callback(callback_query, state: FSMContext, logger, l
     task_id_by_character = int(data.get("task_number"))
 
     if action == "continue":
+
+        await callback_query.message.delete()
         return
     
     elif action == "stop":
         task = await cancel_task_execution(telegram_id=callback_query.from_user.id, task_id_by_character=task_id_by_character, state=state, message=callback_query.message, logger=logger, language_code=language_code)
+        await callback_query.message.delete()
         logger.debug("Задание %s завершено пользователем %s", task.title, callback_query.from_user.id)
         pass
 

@@ -3,14 +3,12 @@ from os import getenv
 from dotenv import load_dotenv
 
 load_dotenv("../config/curves.env")
-REWARD_GROWTH = float(getenv("REWARD_GROWTH"))
-LEVEL_BASE = float(getenv("LEVEL_BASE"))
-LEVEL_GROWTH = float(getenv("LEVEL_GROWTH"))
+REWARD_GROWTH = float(getenv("REWARD_GROWTH", 0.15))
+LEVEL_BASE = float(getenv("LEVEL_BASE", 5))
+LEVEL_GROWTH = float(getenv("LEVEL_GROWTH", 1.5))
 
 def calculateTaskReward(dificultyAverage, dificulty, streak):
-    '''
-    f(difficulty, dificultyAverage, streak) = difficulty + g * difficultyAverage * (1 + math.sqrt(difficultyAverage)*math.log1p(1 + streak)), 2)
-    '''
+
     return round(dificulty + 0.2 * dificultyAverage * (REWARD_GROWTH + math.sqrt(dificultyAverage)*math.log1p(1 + streak)), 2)
 
 def newAverageDifficulty(dificultyAverage: float, dificulty:float, times:int):

@@ -19,8 +19,8 @@ from os import getenv
 from dotenv import load_dotenv
 
 load_dotenv("../config/core.env")
-TIME_TO_EARN_DIFFICULTY = int(getenv("TIME_TO_EARN_DIFFICULTY", "1800"))  # В секундах, по умолчанию 30 минут
-MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK = float(getenv("MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK", "1"))  # Минимальная сложность для деактивации задания
+TIME_TO_EARN_DIFFICULTY = int(getenv("TIME_TO_EARN_DIFFICULTY"))  # В секундах, по умолчанию 30 минут
+MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK = float(getenv("MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK"))  # Минимальная сложность для деактивации задания
 
 # --------- Регистрация нового пользователя ---------
 async def register_new_user(telegram_id: int, username: str):

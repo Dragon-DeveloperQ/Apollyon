@@ -1,9 +1,11 @@
 import logging
 from os import getenv
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv("../config/logging.env")
-PATH = getenv("LOGS_PATH","../logs/")
+HERE = Path(__file__).resolve().parent 
+PATH = getenv("LOGS_PATH", f"{HERE}")
 LEVEL = getenv("LEVEL","INFO")
 FORMAT = getenv("FORMAT", "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s")
 

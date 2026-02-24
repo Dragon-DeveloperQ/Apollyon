@@ -8,5 +8,5 @@ from dotenv import load_dotenv
 BOT_TOKEN = os.getenv("BOT_TOKEN")  
 
 storage = MemoryStorage()
-bot = Bot(token=TOKEN)
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=storage)

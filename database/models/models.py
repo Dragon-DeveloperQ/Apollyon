@@ -5,7 +5,7 @@ from os import getenv
 from dotenv import load_dotenv
 
 load_dotenv("../config/core.env")
-MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK = float(getenv("MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK", "0.1")) 
+MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK = float(getenv("MINIMAL_DIFFICULTY_TO_DEACTIVATE_TASK", "0.5")) 
 
 # Базовый класс для всех моделей
 Base = declarative_base()

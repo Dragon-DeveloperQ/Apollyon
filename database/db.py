@@ -15,7 +15,7 @@ from .models import Base
 
 # Load bot token
 load_dotenv("../config/db.env")
-DATABASE_URL = getenv("DATABASE_URL")
+DATABASE_URL = getenv("DATABASE_URL", "sqlite+aiosqlite:///../database/tables/apollyon.db")
 
 db_logger = logger.getLogger("database")
 

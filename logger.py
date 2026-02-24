@@ -3,9 +3,9 @@ from os import getenv
 from dotenv import load_dotenv
 
 load_dotenv("../config/logging.env")
-PATH = getenv("LOGS_PATH")
-LEVEL = getenv("LEVEL")
-FORMAT = getenv("FORMAT")
+PATH = getenv("LOGS_PATH","../logs/")
+LEVEL = getenv("LEVEL","INFO")
+FORMAT = getenv("FORMAT", "%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(funcName)s | %(message)s")
 
 _loggers = {}
 

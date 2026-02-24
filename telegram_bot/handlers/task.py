@@ -16,7 +16,7 @@ from os import getenv
 from dotenv import load_dotenv
 
 load_dotenv("../config/core.env")
-MAX_TASKS = int(getenv("MAX_TASKS", "20")) 
+MAX_TASKS = int(getenv("MAX_TASKS", 10)) 
 
 router = Router()
 

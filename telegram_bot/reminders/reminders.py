@@ -9,9 +9,9 @@ from os import getenv
 from dotenv import load_dotenv
 load_dotenv("../config/core.env")
 
-REMINDERS_SEND_INTERVAL = float(getenv("REMINDERS_SEND_INTERVAL"))
-REMINDERS_DELAY = float(getenv("REMINDERS_DELAY"))
-REMINDERS_CHECK_DELAY = float(getenv("REMINDERS_CHECK_DELAY"))
+REMINDERS_SEND_INTERVAL = float(getenv("REMINDERS_SEND_INTERVAL", 1800))
+REMINDERS_DELAY = float(getenv("REMINDERS_DELAY", 1900))
+REMINDERS_CHECK_DELAY = float(getenv("REMINDERS_CHECK_DELAY", 10))
 
 async def start_reminder_worker(
         bot: Bot,
